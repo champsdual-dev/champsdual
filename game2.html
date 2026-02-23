@@ -109,6 +109,21 @@
   .restart-btn{position:relative;display:inline-flex;align-items:center;gap:.75rem;padding:.9rem 3rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);transition:transform .2s,filter .2s;}
   .restart-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
   .restart-btn:hover{transform:scale(1.04);filter:brightness(1.1);}
+  img{-webkit-user-drag:none;user-drag:none;pointer-events:none;-webkit-user-select:none;user-select:none;}
+
+  /* ── ChampsDual nav dropdown ── */
+  .nav-wrap{position:relative;display:inline-block;}
+  .nav-btn{background:none;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.7;transition:opacity .2s;display:flex;align-items:center;gap:.3rem;padding:.3rem 0;}
+  .nav-btn:hover{opacity:1;}
+  .nav-arrow{font-size:.42rem;display:inline-block;transition:transform .2s;}
+  .nav-wrap:hover .nav-arrow{transform:rotate(180deg);}
+  .nav-menu{position:absolute;top:100%;left:0;min-width:170px;background:rgba(4,12,26,.98);border:1px solid var(--gold-dark);flex-direction:column;z-index:200;display:none;}
+  .nav-wrap:hover .nav-menu{display:flex;}
+  .nav-wrap::after{content:'';position:absolute;left:0;right:0;height:8px;top:100%;}
+  .nav-item{display:block;padding:.52rem .9rem;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-light);text-decoration:none;opacity:.65;transition:background .15s,opacity .15s;border-bottom:1px solid rgba(200,170,110,.06);white-space:nowrap;}
+  .nav-item:last-child{border-bottom:none;}
+  .nav-item:hover{background:rgba(200,170,110,.12);opacity:1;}
+  .nav-sep{height:1px;background:rgba(200,170,110,.15);margin:.1rem 0;}
 </style>
 </head>
 <body>
@@ -132,7 +147,16 @@
   </div>
 </div>
 <header class="header">
-  <a class="back-btn" href="index.html">← Accueil</a>
+  <div class="nav-wrap">
+  <button class="nav-btn">ChampsDual <span class="nav-arrow">▼</span></button>
+  <div class="nav-menu">
+    <a class="nav-item" href="index.html">🏠 Accueil</a>
+    <div class="nav-sep"></div>
+    <a class="nav-item" href="game.html">🌫️ Flou</a>
+    <a class="nav-item" href="game3.html">🔲 Partiel</a>
+    <a class="nav-item" href="game4.html">⚔️ Champions</a>
+  </div>
+</div>
   <div class="header-title">⏱️ Flou Chrono</div>
   <div class="score-wrap">
     <div class="score-item"><span class="score-label">Score</span><span class="score-value" id="score-display">0</span></div>
