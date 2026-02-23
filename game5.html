@@ -57,8 +57,8 @@
   .card{width:min(520px,96vw);border:1px solid var(--gold-dark);background:linear-gradient(160deg,rgba(12,28,52,.9),rgba(2,10,22,.95));position:relative;padding:1.75rem;margin-bottom:1.5rem;animation:fadeUp .5s ease both;}
   .card::before{content:'';position:absolute;top:-2px;left:-2px;width:20px;height:20px;border:2px solid var(--gold);border-right:none;border-bottom:none;}
   .card::after{content:'';position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border:2px solid var(--gold);border-left:none;border-top:none;}
-  .card-title{font-size:.44rem;letter-spacing:.38em;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;}
-  .card-title-num{font-family:'Cinzel Decorative',serif;font-size:.9rem;color:rgba(200,170,110,.2);}
+  .card-title{font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);opacity:.85;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem;font-family:'Cinzel Decorative',serif;}
+  .card-title-num{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:rgba(200,170,110,.25);}
 
   /* ── Section 1 : Image floue ── */
   .art-wrap{position:relative;width:100%;display:flex;justify-content:center;margin-bottom:1.25rem;}
@@ -792,9 +792,125 @@ function restoreSection2() {
 /* ═══════════════════════════════════════════
    SECTION 3 — QCM
 ═══════════════════════════════════════════ */
+/* ── Données statiques : Origine, Race, Rôle ── */
+const CHAMP_ORIGINS = {
+  Aatrox:'Runeterra',Ahri:'Ionia',Akali:'Ionia',Akshan:'Shurima',Alistar:'Runeterra',
+  Amumu:'Shurima',Anivia:'Freljord',Annie:'Runeterra',Aphelios:'Targon',Ashe:'Freljord',
+  AurelionSol:'Targon',Azir:'Shurima',Bard:'Runeterra',BelVeth:'Void',Blitzcrank:'Zaun',
+  Brand:'Freljord',Braum:'Freljord',Briar:'Noxus',Caitlyn:'Piltover',Camille:'Piltover',
+  Cassiopeia:'Noxus',ChoGath:'Void',Corki:'Cité des Bandits',Darius:'Noxus',Diana:'Targon',
+  DrMundo:'Zaun',Draven:'Noxus',Ekko:'Zaun',Elise:'Îles des Ombres',Evelynn:'Runeterra',
+  Ezreal:'Piltover',Fiddlesticks:'Runeterra',Fiora:'Demacia',Fizz:'Runeterra',Galio:'Demacia',
+  Gangplank:'Bilgewater',Garen:'Demacia',Gnar:'Freljord',Gragas:'Freljord',Graves:'Bilgewater',
+  Gwen:'Îles des Ombres',Hecarim:'Îles des Ombres',Heimerdinger:'Piltover',Hwei:'Ionia',
+  Illaoi:'Bilgewater',Irelia:'Ionia',Ivern:'Ionia',Janna:'Zaun',JarvanIV:'Demacia',
+  Jax:'Runeterra',Jayce:'Piltover',Jhin:'Ionia',Jinx:'Zaun',KSante:'Shurima',
+  KaiSa:'Void',Kalista:'Îles des Ombres',Karma:'Ionia',Karthus:'Îles des Ombres',
+  Kassadin:'Runeterra',Katarina:'Noxus',Kayle:'Demacia',Kayn:'Ionia',Kennen:'Ionia',
+  KhaZix:'Void',Kindred:'Runeterra',Kled:'Noxus',KogMaw:'Void',LeBlanc:'Noxus',
+  LeeSin:'Ionia',Leona:'Targon',Lillia:'Ionia',Lissandra:'Freljord',Lucian:'Demacia',
+  Lulu:'Cité des Bandits',Lux:'Demacia',Malphite:'Ixtal',Malzahar:'Void',Maokai:'Îles des Ombres',
+  MasterYi:'Ionia',Milio:'Ixtal',MissFortune:'Bilgewater',Mordekaiser:'Noxus',Morgana:'Demacia',
+  Naafiri:'Shurima',Nami:'Runeterra',Nasus:'Shurima',Nautilus:'Runeterra',Neeko:'Ixtal',
+  Nidalee:'Ixtal',Nilah:'Runeterra',Nocturne:'Runeterra',Nunu:'Freljord',Olaf:'Freljord',
+  Orianna:'Zaun',Ornn:'Freljord',Pantheon:'Targon',Poppy:'Demacia',Pyke:'Bilgewater',
+  Qiyana:'Ixtal',Quinn:'Demacia',Rakan:'Ionia',Rammus:'Shurima',RekSai:'Void',
+  Rell:'Noxus',RenataGlasic:'Zaun',Renekton:'Shurima',Rengar:'Ixtal',Riven:'Noxus',
+  Rumble:'Cité des Bandits',Ryze:'Runeterra',Samira:'Noxus',Sejuani:'Freljord',
+  Senna:'Runeterra',Seraphine:'Piltover',Sett:'Ionia',Shaco:'Runeterra',Shen:'Ionia',
+  Shyvana:'Demacia',Singed:'Zaun',Sion:'Noxus',Sivir:'Shurima',Skarner:'Shurima',
+  Smolder:'Runeterra',Sona:'Demacia',Soraka:'Targon',Swain:'Noxus',Sylas:'Demacia',
+  Syndra:'Ionia',TahmKench:'Runeterra',Taliyah:'Shurima',Talon:'Noxus',Taric:'Targon',
+  Teemo:'Cité des Bandits',Thresh:'Îles des Ombres',Tristana:'Cité des Bandits',Trundle:'Freljord',
+  Tryndamere:'Freljord',TwistedFate:'Bilgewater',Twitch:'Zaun',Udyr:'Freljord',Urgot:'Zaun',
+  Varus:'Ionia',Vayne:'Demacia',Veigar:'Cité des Bandits',VelKoz:'Void',Vex:'Îles des Ombres',
+  Vi:'Piltover',Viego:'Runeterra',Viktor:'Zaun',Vladimir:'Noxus',Volibear:'Freljord',
+  Warwick:'Zaun',Wukong:'Ionia',Xayah:'Ionia',Xerath:'Shurima',XinZhao:'Demacia',
+  Yasuo:'Ionia',Yone:'Ionia',Yorick:'Îles des Ombres',Yuumi:'Cité des Bandits',Zac:'Zaun',
+  Zed:'Ionia',Zeri:'Zaun',Ziggs:'Cité des Bandits',Zilean:'Runeterra',Zoe:'Targon',
+  Zyra:'Ixtal',Ambessa:'Noxus',Aurora:'Freljord',Mel:'Noxus'
+};
+const CHAMP_SPECIES = {
+  Aatrox:'Darkin',Ahri:'Vastaya',Akali:'Humaine',Akshan:'Humain',Alistar:'Minotaure',
+  Amumu:'Momie',Anivia:'Cryophénix',Annie:'Humaine',Aphelios:'Humain',Ashe:'Humaine',
+  AurelionSol:'Dragon Céleste',Azir:'Ascendant',Bard:'Custodien',BelVeth:'Voidborn',
+  Blitzcrank:'Golem',Brand:'Élémental',Braum:'Humain',Briar:'Vampire',Caitlyn:'Humaine',
+  Camille:'Humaine',Cassiopeia:'Hybride Naga',ChoGath:'Voidborn',Corki:'Yordle',
+  Darius:'Humain',Diana:'Humaine',DrMundo:'Humain',Draven:'Humain',Ekko:'Humain',
+  Elise:'Humaine Araignée',Evelynn:'Démon',Ezreal:'Humain',Fiddlesticks:'Démon',
+  Fiora:'Humaine',Fizz:'Mer-folk',Galio:'Colosse Magique',Gangplank:'Humain',
+  Garen:'Humain',Gnar:'Yordle',Gragas:'Humain',Graves:'Humain',Gwen:'Poupée Magique',
+  Hecarim:'Spectre',Heimerdinger:'Yordle',Hwei:'Humain',Illaoi:'Humaine',Irelia:'Humaine',
+  Ivern:'Humain Arbre',Janna:'Esprit du Vent',JarvanIV:'Humain',Jax:'Humain',Jayce:'Humain',
+  Jhin:'Humain',Jinx:'Humaine',KSante:'Humain',KaiSa:'Humaine',Kalista:'Spectre',
+  Karma:'Humaine',Karthus:'Non-mort',Kassadin:'Humain',Katarina:'Humaine',Kayle:'Céleste',
+  Kayn:'Humain',Kennen:'Yordle',KhaZix:'Voidborn',Kindred:'Esprit',Kled:'Yordle',
+  KogMaw:'Voidborn',LeBlanc:'Humaine',LeeSin:'Humain',Leona:'Humaine',Lillia:'Fée Cervidée',
+  Lissandra:'Humaine',Lucian:'Humain',Lulu:'Yordle',Lux:'Humaine',Malphite:'Golem de Pierre',
+  Malzahar:'Humain',Maokai:'Arbre Magique',MasterYi:'Humain',Milio:'Humain',
+  MissFortune:'Humaine',Mordekaiser:'Non-mort',Morgana:'Céleste',Naafiri:'Darkin',
+  Nami:'Marai',Nasus:'Ascendant',Nautilus:'Humain',Neeko:'Vastaya',Nidalee:'Humaine',
+  Nilah:'Humaine',Nocturne:'Démon',Nunu:'Humain',Olaf:'Humain',Orianna:'Automate',
+  Ornn:'Demi-dieu',Pantheon:'Targonien',Poppy:'Yordle',Pyke:'Non-mort',Qiyana:'Humaine',
+  Quinn:'Humaine',Rakan:'Vastaya',Rammus:'Mystérieux',RekSai:'Voidborn',Rell:'Humaine',
+  RenataGlasic:'Humaine',Renekton:'Ascendant',Rengar:'Vastaya',Riven:'Humaine',
+  Rumble:'Yordle',Ryze:'Humain',Samira:'Humaine',Sejuani:'Humaine',Senna:'Spectre',
+  Seraphine:'Humaine',Sett:'Vastaya',Shaco:'Démon',Shen:'Humain',Shyvana:'Demi-dragon',
+  Singed:'Humain',Sion:'Non-mort',Sivir:'Humaine',Skarner:'Brackern',Smolder:'Dragon',
+  Sona:'Humaine',Soraka:'Céleste',Swain:'Humain',Sylas:'Humain',Syndra:'Humaine',
+  TahmKench:'Démon',Taliyah:'Humaine',Talon:'Humain',Taric:'Céleste',Teemo:'Yordle',
+  Thresh:'Non-mort',Tristana:'Yordle',Trundle:'Troll',Tryndamere:'Humain',
+  TwistedFate:'Humain',Twitch:'Yordle',Udyr:'Humain',Urgot:'Humain',Varus:'Darkin',
+  Vayne:'Humaine',Veigar:'Yordle',VelKoz:'Voidborn',Vex:'Yordle',Vi:'Humaine',
+  Viego:'Humain',Viktor:'Cyborg',Vladimir:'Humain',Volibear:'Demi-dieu',
+  Warwick:'Loup-garou',Wukong:'Vastaya',Xayah:'Vastaya',Xerath:'Ascendant',
+  XinZhao:'Humain',Yasuo:'Humain',Yone:'Humain',Yorick:'Non-mort',Yuumi:'Yordle',
+  Zac:'Créature de Zaun',Zed:'Humain',Zeri:'Humaine',Ziggs:'Yordle',Zilean:'Humain',
+  Zoe:'Céleste',Zyra:'Plante Magique',Ambessa:'Humaine',Aurora:'Humaine',Mel:'Humaine'
+};
+const CHAMP_ROLES = {
+  Aatrox:'Top',Ahri:'Mid',Akali:'Mid',Akshan:'Mid',Alistar:'Support',Amumu:'Jungle',
+  Anivia:'Mid',Annie:'Mid',Aphelios:'ADC',Ashe:'ADC',AurelionSol:'Mid',Azir:'Mid',
+  Bard:'Support',BelVeth:'Jungle',Blitzcrank:'Support',Brand:'Support',Braum:'Support',
+  Briar:'Jungle',Caitlyn:'ADC',Camille:'Top',Cassiopeia:'Mid',ChoGath:'Top',Corki:'Mid',
+  Darius:'Top',Diana:'Jungle',DrMundo:'Top',Draven:'ADC',Ekko:'Jungle',Elise:'Jungle',
+  Evelynn:'Jungle',Ezreal:'ADC',Fiddlesticks:'Jungle',Fiora:'Top',Fizz:'Mid',Galio:'Mid',
+  Gangplank:'Top',Garen:'Top',Gnar:'Top',Gragas:'Jungle',Graves:'Jungle',Gwen:'Top',
+  Hecarim:'Jungle',Heimerdinger:'Mid',Hwei:'Mid',Illaoi:'Top',Irelia:'Top',Ivern:'Jungle',
+  Janna:'Support',JarvanIV:'Jungle',Jax:'Top',Jayce:'Top',Jhin:'ADC',Jinx:'ADC',
+  KSante:'Top',KaiSa:'ADC',Kalista:'ADC',Karma:'Support',Karthus:'Jungle',Kassadin:'Mid',
+  Katarina:'Mid',Kayle:'Top',Kayn:'Jungle',Kennen:'Top',KhaZix:'Jungle',Kindred:'Jungle',
+  Kled:'Top',KogMaw:'ADC',LeBlanc:'Mid',LeeSin:'Jungle',Leona:'Support',Lillia:'Jungle',
+  Lissandra:'Mid',Lucian:'ADC',Lulu:'Support',Lux:'Support',Malphite:'Top',Malzahar:'Mid',
+  Maokai:'Support',MasterYi:'Jungle',Milio:'Support',MissFortune:'ADC',Mordekaiser:'Top',
+  Morgana:'Support',Naafiri:'Mid',Nami:'Support',Nasus:'Top',Nautilus:'Support',Neeko:'Mid',
+  Nidalee:'Jungle',Nilah:'ADC',Nocturne:'Jungle',Nunu:'Jungle',Olaf:'Jungle',Orianna:'Mid',
+  Ornn:'Top',Pantheon:'Support',Poppy:'Jungle',Pyke:'Support',Qiyana:'Mid',Quinn:'Top',
+  Rakan:'Support',Rammus:'Jungle',RekSai:'Jungle',Rell:'Support',RenataGlasic:'Support',
+  Renekton:'Top',Rengar:'Jungle',Riven:'Top',Rumble:'Top',Ryze:'Mid',Samira:'ADC',
+  Sejuani:'Jungle',Senna:'Support',Seraphine:'Support',Sett:'Top',Shaco:'Jungle',
+  Shen:'Top',Shyvana:'Jungle',Singed:'Top',Sion:'Top',Sivir:'ADC',Skarner:'Jungle',
+  Smolder:'ADC',Sona:'Support',Soraka:'Support',Swain:'Support',Sylas:'Jungle',
+  Syndra:'Mid',TahmKench:'Support',Taliyah:'Jungle',Talon:'Mid',Taric:'Support',
+  Teemo:'Top',Thresh:'Support',Tristana:'ADC',Trundle:'Jungle',Tryndamere:'Top',
+  TwistedFate:'Mid',Twitch:'ADC',Udyr:'Jungle',Urgot:'Top',Varus:'ADC',Vayne:'ADC',
+  Veigar:'Mid',VelKoz:'Support',Vex:'Mid',Vi:'Jungle',Viego:'Jungle',Viktor:'Mid',
+  Vladimir:'Mid',Volibear:'Jungle',Warwick:'Jungle',Wukong:'Jungle',Xayah:'ADC',
+  Xerath:'Support',XinZhao:'Jungle',Yasuo:'Mid',Yone:'Mid',Yorick:'Top',Yuumi:'Support',
+  Zac:'Jungle',Zed:'Mid',Zeri:'ADC',Ziggs:'ADC',Zilean:'Support',Zoe:'Mid',
+  Zyra:'Support',Ambessa:'Top',Aurora:'Mid',Mel:'Mid'
+};
+
 function buildQCM() {
   const d = dailyDetail;
-  const tagFR = {'Fighter':'Combattant','Tank':'Tank','Mage':'Mage','Assassin':'Assassin','Support':'Support','Marksman':'Tireur d\'élite'};
+  const id = d.id;
+  const tagFR = {'Fighter':'Combattant','Tank':'Tank','Mage':'Mage','Assassin':'Assassin','Support':'Support','Marksman':'ADC'};
+  const allRoles = ['Top','Jungle','Mid','ADC','Support'];
+  const allRegions = ['Runeterra','Ionia','Noxus','Demacia','Freljord','Piltover','Zaun',
+    'Shurima','Targon','Bilgewater','Îles des Ombres','Void','Ixtal','Cité des Bandits'];
+  const allSpecies = ['Humain','Humaine','Yordle','Darkin','Voidborn','Ascendant','Vastaya',
+    'Céleste','Non-mort','Démon','Spectre','Demi-dieu','Golem','Dragon Céleste',
+    'Brackern','Minotaure','Automate','Troll','Loup-garou'];
   const allClasses = Object.values(tagFR);
   const allPartypes = [...new Set(allChampions.map(c => c.partype))].filter(p => p && p.length > 1);
   const seed = getDailySeed();
@@ -808,28 +924,37 @@ function buildQCM() {
     return a;
   }
 
-  // Q1 — Ressource
+  // Q1 — Origine/Région
+  const correctOrigin = CHAMP_ORIGINS[id] || 'Runeterra';
+  const wrongOrigins = seededShuffle(allRegions.filter(r => r !== correctOrigin), seed ^ 1).slice(0, 3);
+  const q1Choices = seededShuffle([correctOrigin, ...wrongOrigins], seed ^ 11);
+
+  // Q2 — Ressource
   const correctPartype = d.partype || 'Mana';
-  const wrongPartypes = seededShuffle(allPartypes.filter(p => normalize(p) !== normalize(correctPartype)), seed ^ 1).slice(0, 3);
-  const q1Choices = seededShuffle([correctPartype, ...wrongPartypes], seed ^ 11);
+  const wrongPartypes = seededShuffle(allPartypes.filter(p => normalize(p) !== normalize(correctPartype)), seed ^ 2).slice(0, 3);
+  const q2Choices = seededShuffle([correctPartype, ...wrongPartypes], seed ^ 22);
 
-  // Q2 — Classe
+  // Q3 — Race/Espèce
+  const correctSpecies = CHAMP_SPECIES[id] || 'Humain';
+  const wrongSpecies = seededShuffle(allSpecies.filter(s => normalize(s) !== normalize(correctSpecies)), seed ^ 3).slice(0, 3);
+  const q3Choices = seededShuffle([correctSpecies, ...wrongSpecies], seed ^ 33);
+
+  // Q4 — Rôle sur la faille
+  const correctRole = CHAMP_ROLES[id] || 'Mid';
+  const wrongRoles = seededShuffle(allRoles.filter(r => r !== correctRole), seed ^ 4).slice(0, 3);
+  const q4Choices = seededShuffle([correctRole, ...wrongRoles], seed ^ 44);
+
+  // Q5 — Classe
   const correctClass = tagFR[d.tags[0]] || d.tags[0];
-  const wrongClasses = seededShuffle(allClasses.filter(c => c !== correctClass), seed ^ 2).slice(0, 3);
-  const q2Choices = seededShuffle([correctClass, ...wrongClasses], seed ^ 22);
-
-  // Q3 — Difficulté
-  const diffVal = d.info ? d.info.difficulty : 5;
-  const getDiffLabel = v => v <= 3 ? 'Facile' : v <= 6 ? 'Intermédiaire' : v <= 8 ? 'Difficile' : 'Expert';
-  const correctDiff = getDiffLabel(diffVal);
-  const allDiffs = ['Facile', 'Intermédiaire', 'Difficile', 'Expert'];
-  const wrongDiffs = seededShuffle(allDiffs.filter(x => x !== correctDiff), seed ^ 3).slice(0, 3);
-  const q3Choices = seededShuffle([correctDiff, ...wrongDiffs], seed ^ 33);
+  const wrongClasses = seededShuffle(allClasses.filter(c => c !== correctClass), seed ^ 5).slice(0, 3);
+  const q5Choices = seededShuffle([correctClass, ...wrongClasses], seed ^ 55);
 
   questions = [
-    { text: `Quelle ressource <em>${d.name}</em> utilise-t-il/elle pour ses sorts ?`, correct: correctPartype, choices: q1Choices },
-    { text: `Quelle est la classe principale de <em>${d.name}</em> ?`, correct: correctClass, choices: q2Choices },
-    { text: `Quel niveau de difficulté Riot attribue-t-il à <em>${d.name}</em> ?`, correct: correctDiff, choices: q3Choices },
+    { text: `De quel endroit vient <em>${d.name}</em> ?`, correct: correctOrigin, choices: q1Choices },
+    { text: `Quelle ressource <em>${d.name}</em> utilise-t-il/elle ?`, correct: correctPartype, choices: q2Choices },
+    { text: `De quelle Race / Espèce est <em>${d.name}</em> ?`, correct: correctSpecies, choices: q3Choices },
+    { text: `Quel est normalement le rôle de <em>${d.name}</em> sur la Faille ?`, correct: correctRole, choices: q4Choices },
+    { text: `Quelle est la classe de <em>${d.name}</em> ?`, correct: correctClass, choices: q5Choices },
   ];
 }
 
@@ -908,7 +1033,7 @@ function validateQCM() {
 
   document.getElementById('qcm-validate-btn').disabled = true;
   const resEl = document.getElementById('qcm-result');
-  resEl.innerHTML = `<div class="qcm-score">${score}<span>/3</span> bonne${score>1?'s':''} réponse${score>1?'s':''}</div>`;
+  resEl.innerHTML = `<div class="qcm-score">${score}<span>/5</span> bonne${score>1?'s':''} réponse${score>1?'s':''}</div>`;
   resEl.classList.remove('hidden');
 
   setTimeout(() => revealFinal(), 700);
@@ -929,7 +1054,7 @@ function restoreSection3() {
   });
   document.getElementById('qcm-validate-btn').disabled = true;
   const resEl = document.getElementById('qcm-result');
-  resEl.innerHTML = `<div class="qcm-score">${s3Score}<span>/3</span> bonne${s3Score>1?'s':''} réponse${s3Score>1?'s':''}</div>`;
+  resEl.innerHTML = `<div class="qcm-score">${s3Score}<span>/5</span> bonne${s3Score>1?'s':''} réponse${s3Score>1?'s':''}</div>`;
   resEl.classList.remove('hidden');
 }
 
@@ -966,7 +1091,7 @@ function revealFinal() {
       <span class="summary-item-lbl">Sorts</span>
     </div>
     <div class="summary-item">
-      <span class="summary-item-val">${s3Score}/3</span>
+      <span class="summary-item-val">${s3Score}/5</span>
       <span class="summary-item-lbl">Questions</span>
     </div>`;
 }
@@ -978,9 +1103,9 @@ function shareResult() {
     ? '🟩'.repeat(savedState.s1.triesUsed) + '⬜'.repeat(5 - savedState.s1.triesUsed)
     : '🟥🟥🟥🟥🟥';
   const spellsEmoji = SLOT_KEYS.map(sk => savedState.s2.placements[sk] === sk ? '🟩' : '🟥').join('');
-  const qcmEmoji = [0,1,2].map(i => {
+  const qcmEmoji = [0,1,2,3,4].map(i => {
     const ans = savedState.s3.answers[i];
-    return ans && normalize(ans) === normalize(questions[i].correct) ? '🟩' : '🟥';
+    return ans && normalize(ans) === normalize(questions[i]?.correct||'') ? '🟩' : '🟥';
   }).join('');
 
   const txt = `📋 Fiche du Jour — ${d}/${m}/${y}\nChampsDual\n\n🌫️ Devinette : ${triesEmoji}\n⚔️ Sorts     : ${spellsEmoji}\n❓ Questions : ${qcmEmoji}`;
