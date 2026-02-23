@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flou — LoL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  :root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--deep:#010A13;--correct:#2ecc71;--wrong:#e74c3c;}
+  body{background:var(--deep);color:var(--gold-light);font-family:'Cinzel',serif;min-height:100vh;overflow-x:hidden;}
+  .bg-layer{position:fixed;inset:0;z-index:0;}
+  .bg-gradient{background:radial-gradient(ellipse 80% 60% at 50% 30%,#0d1f3c 0%,transparent 70%),var(--deep);}
+  .bg-hexgrid{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='70'%3E%3Cpolygon points='30,2 58,17 58,52 30,67 2,52 2,17' fill='none' stroke='%23C8AA6E' stroke-width='0.3' opacity='0.10'/%3E%3C/svg%3E");background-size:60px 70px;}
+  .corner{position:fixed;width:80px;height:80px;z-index:2;opacity:.4;}
+  .corner-tl{top:0;left:0;border-top:2px solid var(--gold);border-left:2px solid var(--gold);}
+  .corner-tr{top:0;right:0;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .corner-bl{bottom:0;left:0;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);}
+  .corner-br{bottom:0;right:0;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid rgba(200,170,110,.2);}
+  .back-btn{font-size:.65rem;letter-spacing:.25em;color:var(--gold);opacity:.6;text-decoration:none;text-transform:uppercase;transition:opacity .2s;cursor:pointer;background:none;border:none;font-family:'Cinzel',serif;}
+  .back-btn:hover{opacity:1;}
+  .header-title{font-family:'Cinzel Decorative',serif;font-size:clamp(.75rem,2vw,1rem);background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.1em;}
+  .score-wrap{display:flex;gap:1.5rem;align-items:center;}
+  .score-item{text-align:center;}
+  .score-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;display:block;}
+  .score-value{font-size:1.2rem;color:var(--gold-light);font-weight:600;}
+  .game-area{position:relative;z-index:10;max-width:900px;margin:0 auto;padding:2rem 1.5rem 3rem;display:flex;flex-direction:column;align-items:center;gap:2rem;}
+  .round-badge{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);opacity:.6;}
+  .artwork-frame{position:relative;width:min(600px,90vw);aspect-ratio:16/9;border:1px solid var(--gold-dark);overflow:hidden;}
+  .artwork-frame::before,.artwork-frame::after{content:'';position:absolute;width:25px;height:25px;z-index:3;border-color:var(--gold);border-style:solid;}
+  .artwork-frame::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+  .artwork-frame::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+  .artwork-img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;opacity:0;transition:opacity .05s;}
+  .artwork-img.ready{opacity:1;}
+  .artwork-img.blurred{filter:blur(18px);}
+  .reveal-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;opacity:0;transition:opacity .4s;}
+  .reveal-overlay.show{opacity:1;}
+  .reveal-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.5rem,5vw,3rem);text-align:center;padding:.5rem 2rem;background:rgba(1,10,19,.75);border:1px solid var(--gold-dark);background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .hint-text{position:absolute;bottom:1rem;right:1rem;font-size:.55rem;letter-spacing:.25em;color:var(--gold);opacity:.4;text-transform:uppercase;z-index:5;cursor:pointer;transition:opacity .2s;background:none;border:none;font-family:'Cinzel',serif;}
+  .hint-text:hover{opacity:.9;}
+  .hint-text.used{opacity:.2;pointer-events:none;}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;width:min(600px,90vw);}
+  .choice-btn{position:relative;padding:.9rem 1.5rem;background:rgba(10,22,40,.8);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:clamp(.7rem,1.5vw,.85rem);letter-spacing:.1em;cursor:pointer;text-align:center;transition:all .2s ease;clip-path:polygon(8px 0%,calc(100% - 8px) 0%,100% 50%,calc(100% - 8px) 100%,8px 100%,0% 50%);overflow:hidden;}
+  .choice-btn::before{content:'';position:absolute;inset:0;background:rgba(200,170,110,.05);transition:background .2s;}
+  .choice-btn:hover:not(:disabled)::before{background:rgba(200,170,110,.12);}
+  .choice-btn:disabled{cursor:not-allowed;}
+  .choice-btn.correct{border-color:var(--correct);color:var(--correct);animation:pulse-c .5s ease;}
+  .choice-btn.correct::before{background:rgba(46,204,113,.15);}
+  .choice-btn.wrong{border-color:var(--wrong);color:var(--wrong);animation:shake .4s ease;}
+  .choice-btn.wrong::before{background:rgba(231,76,60,.15);}
+  @keyframes pulse-c{0%,100%{transform:scale(1);}50%{transform:scale(1.03);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .feedback{text-align:center;min-height:1.5rem;}
+  .feedback-text{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;}
+  .feedback-text.correct{color:var(--correct);}
+  .feedback-text.wrong{color:var(--wrong);}
+  .next-btn{position:relative;display:inline-flex;align-items:center;gap:.75rem;padding:.9rem 3rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.8rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);transition:transform .2s,opacity .3s;opacity:0;pointer-events:none;clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);}
+  .next-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .next-btn.visible{opacity:1;pointer-events:all;}
+  .next-btn:hover{transform:scale(1.04);filter:brightness(1.1);}
+  .hint-counter{display:flex;align-items:center;gap:.5rem;font-size:.55rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);opacity:.5;}
+  .enter-hint{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:0;transition:opacity .3s;}
+  .enter-hint.visible{opacity:.4;}
+  .loading{position:fixed;inset:0;z-index:50;background:var(--deep);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity .6s ease;}
+  .loading.hidden{opacity:0;pointer-events:none;}
+  .loading-title{font-family:'Cinzel Decorative',serif;font-size:1.5rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .loading-bar-wrap{width:200px;height:2px;background:rgba(200,170,110,.2);overflow:hidden;}
+  .loading-bar{width:100%;height:100%;background:linear-gradient(to right,transparent,var(--gold),transparent);animation:scan 1.2s ease-in-out infinite;}
+  @keyframes scan{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+  .loading-text{font-size:.6rem;letter-spacing:.3em;color:var(--gold);opacity:.5;text-transform:uppercase;}
+  .gameover{position:fixed;inset:0;z-index:40;background:rgba(1,10,19,.97);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s ease;}
+  .gameover.show{opacity:1;pointer-events:all;}
+  .gameover-box{text-align:center;border:1px solid var(--gold-dark);padding:3rem 4rem;background:linear-gradient(135deg,#0a1628,#010a13);position:relative;max-width:480px;width:90%;}
+  .gameover-box::before{content:'';position:absolute;top:-2px;left:-2px;width:25px;height:25px;border:2px solid var(--gold);border-right:none;border-bottom:none;}
+  .gameover-box::after{content:'';position:absolute;bottom:-2px;right:-2px;width:25px;height:25px;border:2px solid var(--gold);border-left:none;border-top:none;}
+  .gameover-title{font-family:'Cinzel Decorative',serif;font-size:1.8rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+  .gameover-sub{font-size:.6rem;letter-spacing:.3em;color:var(--gold);opacity:.6;text-transform:uppercase;margin-bottom:2rem;}
+  .gameover-score{font-size:3.5rem;color:var(--gold);font-weight:600;margin-bottom:.25rem;}
+  .gameover-max{font-size:.65rem;letter-spacing:.25em;color:var(--gold);opacity:.5;margin-bottom:2.5rem;}
+  .rank-label{font-size:.7rem;letter-spacing:.2em;color:var(--gold);margin-bottom:2rem;min-height:1.2em;}
+  .restart-btn{position:relative;display:inline-flex;align-items:center;gap:.75rem;padding:.9rem 3rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);transition:transform .2s,filter .2s;}
+  .restart-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .restart-btn:hover{transform:scale(1.04);filter:brightness(1.1);}
+</style>
+</head>
+<body>
+<div class="bg-layer bg-gradient"></div>
+<div class="bg-layer bg-hexgrid"></div>
+<div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div><div class="corner corner-br"></div>
+<div class="loading" id="loading">
+  <div class="loading-title">Convocation...</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-text">Chargement des champions</div>
+</div>
+<div class="gameover" id="gameover">
+  <div class="gameover-box">
+    <div class="gameover-title">Partie Terminée</div>
+    <div class="gameover-sub">Résultat final</div>
+    <div class="gameover-score" id="final-score">0</div>
+    <div class="gameover-max" id="final-max">/ 10 correct</div>
+    <div class="rank-label" id="rank-label"></div>
+    <button class="restart-btn" onclick="restartGame()">Rejouer</button>
+  </div>
+</div>
+<header class="header">
+  <a class="back-btn" href="index.html">← Accueil</a>
+  <div class="header-title">🌫️ Flou</div>
+  <div class="score-wrap">
+    <div class="score-item"><span class="score-label">Score</span><span class="score-value" id="score">0</span></div>
+    <div class="score-item"><span class="score-label">Round</span><span class="score-value" id="round">1 / 10</span></div>
+  </div>
+</header>
+<div class="game-area">
+  <div class="round-badge" id="round-badge">Round 1 — Devinez le champion</div>
+  <div class="artwork-frame">
+    <img class="artwork-img blurred" id="artwork-img" src="" alt="">
+    <div class="reveal-overlay" id="reveal-overlay">
+      <div class="reveal-name" id="reveal-name"></div>
+    </div>
+    <button class="hint-text" id="hint-btn" onclick="useHint()">🔍 Indice (-1 choix)</button>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextRound()">Suivant →</button>
+  <div class="enter-hint" id="enter-hint">↵ Entrée pour continuer</div>
+  <div class="hint-counter">Indices restants : <span id="hint-left">3</span></div>
+</div>
+
+<script>
+  const TOTAL_ROUNDS = 10;
+  let allChampions = [];
+  let champQueue   = [];
+  let version = '';
+  let current = null;
+  let roundNum = 1, score = 0, hintsLeft = 3;
+  let answered = false;
+
+  async function init() {
+    try {
+      const v = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+      version = (await v.json())[0];
+      const r = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`);
+      allChampions = Object.values((await r.json()).data);
+      document.getElementById('loading').classList.add('hidden');
+      buildQueue();
+      loadRound();
+    } catch(e) {
+      document.querySelector('.loading-text').textContent = 'Erreur réseau';
+    }
+  }
+
+  /* Shuffle champions so no repeat during a game */
+  function buildQueue() {
+    champQueue = [...allChampions].sort(() => Math.random() - .5);
+  }
+
+  function loadRound() {
+    answered = false;
+    document.getElementById('feedback').innerHTML = '';
+    document.getElementById('next-btn').classList.remove('visible');
+    document.getElementById('enter-hint').classList.remove('visible');
+    document.getElementById('reveal-overlay').classList.remove('show');
+    document.getElementById('round-badge').textContent = `Round ${roundNum} — Devinez le champion`;
+    document.getElementById('round').textContent = `${roundNum} / ${TOTAL_ROUNDS}`;
+    document.getElementById('hint-btn').classList.remove('used');
+    document.getElementById('hint-left').textContent = hintsLeft;
+
+    current = champQueue[roundNum - 1];
+
+    /* Preload image invisible, blurred, then show */
+    const img = document.getElementById('artwork-img');
+    img.classList.remove('ready');
+    img.classList.add('blurred');
+    img.style.filter = '';
+    img.onload = () => { void img.offsetWidth; img.classList.add('ready'); };
+    img.src = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${current.id}_0.jpg`;
+
+    /* 4 choices: 3 wrong from remaining queue + current */
+    const pool  = champQueue.filter((_, i) => i !== roundNum - 1);
+    const wrong = pool.sort(() => Math.random() - .5).slice(0, 3);
+    const all   = [...wrong, current].sort(() => Math.random() - .5);
+
+    const container = document.getElementById('choices');
+    container.innerHTML = '';
+    all.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = ch.name;
+      btn.dataset.id = ch.id;
+      btn.onclick = () => answer(ch.id, btn);
+      container.appendChild(btn);
+    });
+  }
+
+  function answer(id, btn) {
+    if (answered) return;
+    answered = true;
+    const isCorrect = id === current.id;
+
+    document.getElementById('artwork-img').classList.remove('blurred');
+    document.getElementById('reveal-name').textContent = current.name;
+    document.getElementById('reveal-overlay').classList.add('show');
+
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      b.disabled = true;
+      if (b.dataset.id === current.id) b.classList.add('correct');
+    });
+    if (!isCorrect) { btn.classList.remove('correct'); btn.classList.add('wrong'); }
+
+    if (isCorrect) {
+      score++;
+      document.getElementById('score').textContent = score;
+      document.getElementById('feedback').innerHTML = `<div class="feedback-text correct">✓ Excellente réponse !</div>`;
+    } else {
+      document.getElementById('feedback').innerHTML = `<div class="feedback-text wrong">✗ C'était ${current.name}</div>`;
+    }
+
+    if (roundNum >= TOTAL_ROUNDS) {
+      setTimeout(showGameOver, 1400);
+    } else {
+      document.getElementById('next-btn').classList.add('visible');
+      document.getElementById('enter-hint').classList.add('visible');
+    }
+  }
+
+  function useHint() {
+    if (hintsLeft <= 0 || answered) return;
+    hintsLeft--;
+    document.getElementById('hint-left').textContent = hintsLeft;
+    if (hintsLeft === 0) document.getElementById('hint-btn').classList.add('used');
+    const wrongBtns = [...document.querySelectorAll('.choice-btn')].filter(b => b.dataset.id !== current.id && !b.disabled);
+    if (wrongBtns.length) {
+      const rem = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
+      rem.style.opacity = '.2';
+      rem.disabled = true;
+    }
+  }
+
+  function nextRound() {
+    if (roundNum >= TOTAL_ROUNDS) { showGameOver(); return; }
+    roundNum++;
+    document.getElementById('artwork-img').style.filter = '';
+    loadRound();
+  }
+
+  function showGameOver() {
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('final-max').textContent = `/ ${TOTAL_ROUNDS} correct`;
+    const pct = score / TOTAL_ROUNDS;
+    const ranks = [[1,'👑 Rang S+ — Maître des Champions !'],[.8,'⚔️ Rang A — Diamant Invocateur'],[.6,'🛡️ Rang B — Platine Vaillant'],[.4,'🗡️ Rang C — Or Apprenti'],[0,'💀 Rang D — Retournez vous entraîner...']];
+    document.getElementById('rank-label').textContent = ranks.find(([t]) => pct >= t)[1];
+    document.getElementById('gameover').classList.add('show');
+  }
+
+  function restartGame() {
+    roundNum = 1; score = 0; hintsLeft = 3; answered = false;
+    document.getElementById('score').textContent = '0';
+    document.getElementById('gameover').classList.remove('show');
+    buildQueue();
+    loadRound();
+  }
+
+  /* Enter key → next round */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && answered) {
+      const nb = document.getElementById('next-btn');
+      if (nb.classList.contains('visible')) nextRound();
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partiel — LoL</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  :root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--deep:#010A13;--correct:#2ecc71;--wrong:#e74c3c;}
+  body{background:var(--deep);color:var(--gold-light);font-family:'Cinzel',serif;min-height:100vh;overflow-x:hidden;}
+  .bg-layer{position:fixed;inset:0;z-index:0;}
+  .bg-gradient{background:radial-gradient(ellipse 80% 60% at 50% 30%,#0d1f3c 0%,transparent 70%),var(--deep);}
+  .bg-hexgrid{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='70'%3E%3Cpolygon points='30,2 58,17 58,52 30,67 2,52 2,17' fill='none' stroke='%23C8AA6E' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");background-size:60px 70px;}
+  .corner{position:fixed;width:80px;height:80px;z-index:2;opacity:.4;}
+  .corner-tl{top:0;left:0;border-top:2px solid var(--gold);border-left:2px solid var(--gold);}
+  .corner-tr{top:0;right:0;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .corner-bl{bottom:0;left:0;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);}
+  .corner-br{bottom:0;right:0;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid rgba(200,170,110,.2);}
+  .back-btn{font-size:.65rem;letter-spacing:.25em;color:var(--gold);opacity:.6;text-decoration:none;text-transform:uppercase;transition:opacity .2s;cursor:pointer;background:none;border:none;font-family:'Cinzel',serif;}
+  .back-btn:hover{opacity:1;}
+  .header-title{font-family:'Cinzel Decorative',serif;font-size:clamp(.75rem,2vw,1rem);background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.1em;}
+  .score-wrap{display:flex;gap:1.5rem;}
+  .score-item{text-align:center;}
+  .score-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;display:block;}
+  .score-value{font-size:1.2rem;color:var(--gold-light);font-weight:600;}
+  .game-area{position:relative;z-index:10;max-width:720px;margin:0 auto;padding:2rem 1.5rem 3rem;display:flex;flex-direction:column;align-items:center;gap:1.5rem;}
+  .top-info{display:flex;align-items:center;gap:3rem;}
+  .info-block{text-align:center;}
+  .info-val{font-family:'Cinzel Decorative',serif;font-size:2rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 10px rgba(200,170,110,.4));line-height:1;}
+  .info-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;margin-top:.3rem;}
+  .lives{display:flex;gap:4px;align-items:center;flex-wrap:wrap;max-width:200px;justify-content:center;}
+  .life{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 5px var(--gold);transition:all .3s;}
+  .life.lost{background:transparent;border:1px solid var(--gold-dark);box-shadow:none;}
+  .window-info{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;}
+
+  /* ── Artwork container ── */
+  .artwork-wrap{
+    position:relative;
+    width:min(600px,90vw);
+    aspect-ratio:16/9;
+    border:1px solid var(--gold-dark);
+    overflow:hidden;
+    background:#010A13; /* pure dark — visible outside the clip window */
+  }
+  .artwork-wrap::before,.artwork-wrap::after{
+    content:'';position:absolute;width:20px;height:20px;z-index:5;
+    border-color:var(--gold);border-style:solid;pointer-events:none;
+  }
+  .artwork-wrap::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+  .artwork-wrap::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+
+  /*
+   * Image is absolutely positioned, clipped via clip-path.
+   * It starts invisible (opacity:0).
+   * Clip is set BEFORE the image becomes visible (no transition on first set).
+   * Subsequent expansions use a transition.
+   */
+  .artwork-img{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;object-position:center top;
+    display:block;
+    opacity:0;
+    /* clip-path transition is enabled dynamically after first placement */
+  }
+
+  /*
+   * Gold border tracks the reveal window.
+   * Transitions are disabled on first placement, enabled afterwards.
+   */
+  .window-border{
+    position:absolute;
+    z-index:4;
+    border:2px solid var(--gold);
+    box-shadow:0 0 14px rgba(200,170,110,.5), inset 0 0 6px rgba(200,170,110,.1);
+    pointer-events:none;
+    /* transitions added dynamically */
+  }
+  .window-border::before,.window-border::after{
+    content:'';position:absolute;width:10px;height:10px;
+    border-color:var(--gold-light);border-style:solid;opacity:.6;
+  }
+  .window-border::before{bottom:-1px;left:-1px;border-width:0 0 2px 2px;}
+  .window-border::after{top:-1px;right:-1px;border-width:2px 2px 0 0;}
+
+  /* Revealed state: remove clip, hide border */
+  .artwork-wrap.revealed .artwork-img{clip-path:none !important;transition:clip-path .5s ease,opacity .3s;}
+  .artwork-wrap.revealed .window-border{display:none;}
+
+  /* Champion name after reveal */
+  .champ-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:none;opacity:0;transition:opacity .4s;}
+  .champ-reveal.show{opacity:1;}
+  .champ-reveal-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,4vw,2.5rem);padding:.5rem 2rem;background:rgba(1,10,19,.8);border:1px solid var(--gold-dark);background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+  /* Input */
+  .input-area{width:min(600px,90vw);display:flex;flex-direction:column;gap:.75rem;}
+  .input-wrap{position:relative;}
+  .champ-input{width:100%;padding:.9rem 1.25rem;background:rgba(10,22,40,.9);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:.85rem;letter-spacing:.1em;outline:none;transition:border-color .2s;}
+  .champ-input:focus{border-color:var(--gold);}
+  .champ-input::placeholder{color:rgba(200,170,110,.3);}
+  .champ-input:disabled{opacity:.4;}
+  .autocomplete{position:absolute;top:100%;left:0;right:0;z-index:20;background:rgba(5,15,30,.97);border:1px solid var(--gold-dark);border-top:none;max-height:200px;overflow-y:auto;display:none;}
+  .autocomplete.open{display:block;}
+  .auto-item{padding:.6rem 1.25rem;font-size:.8rem;letter-spacing:.08em;color:var(--gold-light);cursor:pointer;transition:background .15s;}
+  .auto-item:hover,.auto-item.selected{background:rgba(200,170,110,.15);}
+  .auto-item strong{color:var(--gold);}
+  .submit-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.9rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.8rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);transition:transform .2s,filter .2s;}
+  .submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .submit-btn:hover:not(:disabled){transform:scale(1.02);filter:brightness(1.1);}
+  .submit-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .feedback{text-align:center;min-height:1.5rem;}
+  .feedback-text{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;}
+  .feedback-text.correct{color:var(--correct);}
+  .feedback-text.wrong{color:var(--wrong);}
+  .next-btn{position:relative;display:inline-flex;align-items:center;gap:.75rem;padding:.9rem 3rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.8rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);transition:transform .2s,opacity .3s;opacity:0;pointer-events:none;clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);}
+  .next-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .next-btn.visible{opacity:1;pointer-events:all;}
+  .next-btn:hover{transform:scale(1.04);filter:brightness(1.1);}
+  .enter-hint{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:0;transition:opacity .3s;}
+  .enter-hint.visible{opacity:.4;}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
+  .shake{animation:shake .35s ease;}
+  .loading{position:fixed;inset:0;z-index:50;background:var(--deep);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity .6s ease;}
+  .loading.hidden{opacity:0;pointer-events:none;}
+  .loading-title{font-family:'Cinzel Decorative',serif;font-size:1.5rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .loading-bar-wrap{width:200px;height:2px;background:rgba(200,170,110,.2);overflow:hidden;}
+  .loading-bar{width:100%;height:100%;background:linear-gradient(to right,transparent,var(--gold),transparent);animation:scan 1.2s ease-in-out infinite;}
+  @keyframes scan{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+  .loading-text{font-size:.6rem;letter-spacing:.3em;color:var(--gold);opacity:.5;text-transform:uppercase;}
+  .gameover{position:fixed;inset:0;z-index:40;background:rgba(1,10,19,.97);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s ease;}
+  .gameover.show{opacity:1;pointer-events:all;}
+  .gameover-box{text-align:center;border:1px solid var(--gold-dark);padding:3rem 4rem;background:linear-gradient(135deg,#0a1628,#010a13);position:relative;max-width:480px;width:90%;}
+  .gameover-box::before{content:'';position:absolute;top:-2px;left:-2px;width:25px;height:25px;border:2px solid var(--gold);border-right:none;border-bottom:none;}
+  .gameover-box::after{content:'';position:absolute;bottom:-2px;right:-2px;width:25px;height:25px;border:2px solid var(--gold);border-left:none;border-top:none;}
+  .gameover-title{font-family:'Cinzel Decorative',serif;font-size:1.8rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+  .gameover-sub{font-size:.6rem;letter-spacing:.3em;color:var(--gold);opacity:.6;text-transform:uppercase;margin-bottom:2rem;}
+  .gameover-score{font-size:3.5rem;color:var(--gold);font-weight:600;margin-bottom:.25rem;}
+  .gameover-max{font-size:.65rem;letter-spacing:.25em;color:var(--gold);opacity:.5;margin-bottom:1.5rem;}
+  .rank-label{font-size:.7rem;letter-spacing:.2em;color:var(--gold);margin-bottom:2rem;}
+  .restart-btn{position:relative;display:inline-flex;align-items:center;gap:.75rem;padding:.9rem 3rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);transition:transform .2s,filter .2s;}
+  .restart-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .restart-btn:hover{transform:scale(1.04);filter:brightness(1.1);}
+</style>
+</head>
+<body>
+<div class="bg-layer bg-gradient"></div>
+<div class="bg-layer bg-hexgrid"></div>
+<div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div><div class="corner corner-br"></div>
+<div class="loading" id="loading">
+  <div class="loading-title">Convocation...</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-text">Chargement des champions</div>
+</div>
+<div class="gameover" id="gameover">
+  <div class="gameover-box">
+    <div class="gameover-title">Partie Terminée</div>
+    <div class="gameover-sub">Score final — Partiel</div>
+    <div class="gameover-score" id="final-score">0</div>
+    <div class="gameover-max">/ 1000 pts max</div>
+    <div class="rank-label" id="rank-label"></div>
+    <button class="restart-btn" onclick="restartGame()">Rejouer</button>
+  </div>
+</div>
+<header class="header">
+  <a class="back-btn" href="index.html">← Accueil</a>
+  <div class="header-title">🔲 Partiel</div>
+  <div class="score-wrap">
+    <div class="score-item"><span class="score-label">Score</span><span class="score-value" id="score-display">0</span></div>
+    <div class="score-item"><span class="score-label">Round</span><span class="score-value" id="round-display">1/10</span></div>
+  </div>
+</header>
+<div class="game-area">
+  <div class="top-info">
+    <div class="info-block">
+      <div class="info-val" id="pts-avail">100</div>
+      <div class="info-label">points dispo</div>
+    </div>
+    <div class="info-block">
+      <div class="lives" id="lives"></div>
+      <div class="info-label" style="margin-top:.5rem">essais restants</div>
+    </div>
+  </div>
+  <div class="window-info" id="window-info">Fenêtre : 10% de l'image</div>
+  <div class="artwork-wrap" id="artwork-wrap">
+    <img class="artwork-img" id="artwork-img" src="" alt="">
+    <div class="window-border" id="window-border"></div>
+    <div class="champ-reveal" id="champ-reveal">
+      <div class="champ-reveal-name" id="champ-reveal-name"></div>
+    </div>
+  </div>
+  <div class="input-area">
+    <div class="input-wrap">
+      <input class="champ-input" id="champ-input" type="text" placeholder="Entrez le nom du champion..." autocomplete="off">
+      <div class="autocomplete" id="autocomplete"></div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">Valider</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextRound()">Round suivant →</button>
+  <div class="enter-hint" id="enter-hint">↵ Entrée pour continuer</div>
+</div>
+
+<script>
+  const TOTAL_ROUNDS = 10;
+  const MAX_LIVES    = 10;
+  // Points awarded for correct answer on attempt N (index = attempts used - 1)
+  const POINTS_TABLE = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
+  // Window size as % of container, one step per wrong attempt
+  const WINDOW_STEPS = [10, 16, 23, 31, 39, 47, 55, 64, 73, 82, 95];
+
+  let allChampions = [], champNames = [], champQueue = [], version = '';
+  let current = null;
+  let roundNum = 1, totalScore = 0;
+  let livesLeft = MAX_LIVES, triesUsed = 0;
+  let answered = false, winStep = 0;
+  let winCX = 50, winCY = 40;
+  let selectedAuto = -1;
+  let transitionsEnabled = false;
+
+  /* ── Init ── */
+  async function init() {
+    try {
+      const v = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+      version = (await v.json())[0];
+      const r = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`);
+      allChampions = Object.values((await r.json()).data);
+      champNames   = allChampions.map(c => c.name);
+      document.getElementById('loading').classList.add('hidden');
+      buildQueue();
+      loadRound();
+    } catch(e) { document.querySelector('.loading-text').textContent = 'Erreur réseau'; }
+  }
+
+  function buildQueue() {
+    champQueue = [...allChampions].sort(() => Math.random() - .5);
+  }
+
+  /* ── Load round ── */
+  function loadRound() {
+    answered = false;
+    triesUsed = 0;
+    winStep = 0;
+    livesLeft = MAX_LIVES;
+    selectedAuto = -1;
+    transitionsEnabled = false;
+
+    document.getElementById('feedback').innerHTML = '';
+    document.getElementById('next-btn').classList.remove('visible');
+    document.getElementById('enter-hint').classList.remove('visible');
+    document.getElementById('champ-reveal').classList.remove('show');
+    document.getElementById('artwork-wrap').classList.remove('revealed');
+    document.getElementById('champ-input').value = '';
+    document.getElementById('champ-input').disabled = false;
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('autocomplete').classList.remove('open');
+    document.getElementById('round-display').textContent = `${roundNum}/10`;
+
+    current = champQueue[roundNum - 1];
+
+    // Random center (20%–80% so window stays inside)
+    winCX = 20 + Math.random() * 60;
+    winCY = 20 + Math.random() * 60;
+
+    renderLives();
+    updatePointsDisplay();
+
+    /*
+     * KEY FIX: Load image invisible.
+     * 1. Set clip-path BEFORE the image becomes visible → no travel animation
+     * 2. Show border at correct position (no transition)
+     * 3. Make image visible
+     * 4. Enable transitions for future expansions
+     */
+    const img     = document.getElementById('artwork-img');
+    const border  = document.getElementById('window-border');
+
+    img.style.transition    = 'none';
+    img.style.opacity       = '0';
+    border.style.transition = 'none';
+
+    img.onload = () => {
+      // Compute and set clip immediately (no transition)
+      const coords = computeWindow();
+      setClipImmediate(coords);
+      setBorderImmediate(coords);
+
+      // Now reveal image
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          img.style.opacity = '1';
+          // Enable transitions for NEXT expansions
+          setTimeout(() => {
+            transitionsEnabled = true;
+            img.style.transition = 'clip-path .45s cubic-bezier(.25,.46,.45,.94)';
+            border.style.transition = 'left .45s cubic-bezier(.25,.46,.45,.94), top .45s cubic-bezier(.25,.46,.45,.94), width .45s cubic-bezier(.25,.46,.45,.94), height .45s cubic-bezier(.25,.46,.45,.94)';
+          }, 100);
+        });
+      });
+    };
+    img.src = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${current.id}_0.jpg`;
+
+    document.getElementById('champ-input').focus();
+  }
+
+  /* ── Compute window geometry ── */
+  function computeWindow() {
+    const wrap = document.getElementById('artwork-wrap');
+    const W = wrap.offsetWidth, H = wrap.offsetHeight;
+    const pct = WINDOW_STEPS[winStep] / 100;
+    const wW  = W * pct, wH = H * pct;
+    let l = W * winCX / 100 - wW / 2;
+    let t = H * winCY / 100 - wH / 2;
+    l = Math.max(0, Math.min(l, W - wW));
+    t = Math.max(0, Math.min(t, H - wH));
+    return { l, t, wW, wH, W, H };
+  }
+
+  function setClipImmediate({ l, t, wW, wH, W, H }) {
+    const img = document.getElementById('artwork-img');
+    img.style.transition = 'none';
+    img.style.clipPath = `inset(${t}px ${W - l - wW}px ${H - t - wH}px ${l}px)`;
+  }
+
+  function setBorderImmediate({ l, t, wW, wH }) {
+    const border = document.getElementById('window-border');
+    border.style.transition = 'none';
+    border.style.left   = l + 'px';
+    border.style.top    = t + 'px';
+    border.style.width  = wW + 'px';
+    border.style.height = wH + 'px';
+  }
+
+  function expandWindow() {
+    winStep = Math.min(winStep + 1, WINDOW_STEPS.length - 1);
+    const coords = computeWindow();
+    const img    = document.getElementById('artwork-img');
+    const border = document.getElementById('window-border');
+    const { l, t, wW, wH, W, H } = coords;
+
+    img.style.clipPath = `inset(${t}px ${W - l - wW}px ${H - t - wH}px ${l}px)`;
+    border.style.left   = l + 'px';
+    border.style.top    = t + 'px';
+    border.style.width  = wW + 'px';
+    border.style.height = wH + 'px';
+
+    document.getElementById('window-info').textContent = `Fenêtre : ${WINDOW_STEPS[winStep]}% de l'image`;
+  }
+
+  /* ── Lives & points ── */
+  function renderLives() {
+    const el = document.getElementById('lives');
+    el.innerHTML = '';
+    for (let i = 0; i < MAX_LIVES; i++) {
+      const d = document.createElement('div');
+      d.className = 'life' + (i >= livesLeft ? ' lost' : '');
+      el.appendChild(d);
+    }
+  }
+
+  function updatePointsDisplay() {
+    const pts = answered ? 0 : POINTS_TABLE[Math.min(triesUsed, POINTS_TABLE.length - 1)];
+    document.getElementById('pts-avail').textContent = pts;
+  }
+
+  /* ── Answer ── */
+  function submitAnswer() {
+    if (answered) return;
+    const val = document.getElementById('champ-input').value.trim();
+    if (!val) return;
+    const items = document.getElementById('autocomplete').querySelectorAll('.auto-item');
+    if (document.getElementById('autocomplete').classList.contains('open') && items.length > 0 && selectedAuto === -1) {
+      selectAuto(items[0].dataset.name);
+      return;
+    }
+    checkAnswer(val);
+  }
+
+  function checkAnswer(val) {
+    if (answered) return;
+    document.getElementById('champ-input').value = '';
+    document.getElementById('autocomplete').classList.remove('open');
+    selectedAuto = -1;
+
+    const isCorrect = normalize(val) === normalize(current.name);
+
+    if (isCorrect) {
+      answered = true;
+      triesUsed++;
+      const pts = POINTS_TABLE[Math.min(triesUsed - 1, POINTS_TABLE.length - 1)];
+      totalScore += pts;
+      document.getElementById('score-display').textContent = totalScore;
+      document.getElementById('champ-input').disabled = true;
+      document.getElementById('submit-btn').disabled = true;
+      revealFull();
+      document.getElementById('feedback').innerHTML =
+        `<div class="feedback-text correct">✓ Exact ! +${pts} pts en ${triesUsed} essai(s)</div>`;
+      if (roundNum >= TOTAL_ROUNDS) setTimeout(showGameOver, 1500);
+      else {
+        document.getElementById('next-btn').classList.add('visible');
+        document.getElementById('enter-hint').classList.add('visible');
+      }
+    } else {
+      triesUsed++;
+      livesLeft--;
+      renderLives();
+
+      // Shake
+      const wrap = document.getElementById('artwork-wrap');
+      wrap.classList.add('shake');
+      setTimeout(() => wrap.classList.remove('shake'), 400);
+
+      if (livesLeft <= 0) {
+        answered = true;
+        document.getElementById('champ-input').disabled = true;
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('pts-avail').textContent = '0';
+        revealFull();
+        document.getElementById('feedback').innerHTML =
+          `<div class="feedback-text wrong">✗ C'était ${current.name}</div>`;
+        if (roundNum >= TOTAL_ROUNDS) setTimeout(showGameOver, 1500);
+        else {
+          document.getElementById('next-btn').classList.add('visible');
+          document.getElementById('enter-hint').classList.add('visible');
+        }
+      } else {
+        expandWindow();
+        updatePointsDisplay();
+        document.getElementById('feedback').innerHTML =
+          `<div class="feedback-text wrong">✗ Mauvaise réponse — la fenêtre s'agrandit !</div>`;
+      }
+    }
+  }
+
+  function revealFull() {
+    document.getElementById('artwork-wrap').classList.add('revealed');
+    document.getElementById('champ-reveal-name').textContent = current.name;
+    document.getElementById('champ-reveal').classList.add('show');
+  }
+
+  function normalize(s) {
+    return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+  }
+
+  /* ── Navigation ── */
+  function nextRound() {
+    if (roundNum >= TOTAL_ROUNDS) { showGameOver(); return; }
+    roundNum++;
+    loadRound();
+  }
+
+  function showGameOver() {
+    document.getElementById('final-score').textContent = totalScore;
+    const pct = totalScore / (TOTAL_ROUNDS * 100);
+    const ranks = [[.9,'👑 Rang S+ — Vision de Maître !'],[.7,'⚔️ Rang A — Œil de Diamant'],[.5,'🛡️ Rang B — Platine Perspicace'],[.3,'🗡️ Rang C — Or Hésitant'],[0,'💀 Rang D — Entraînez votre regard...']];
+    document.getElementById('rank-label').textContent = ranks.find(([t]) => pct >= t)[1];
+    document.getElementById('gameover').classList.add('show');
+  }
+
+  function restartGame() {
+    roundNum = 1; totalScore = 0;
+    document.getElementById('score-display').textContent = '0';
+    document.getElementById('gameover').classList.remove('show');
+    buildQueue();
+    loadRound();
+  }
+
+  /* ── Autocomplete ── */
+  const inputEl = document.getElementById('champ-input');
+  const dropEl  = document.getElementById('autocomplete');
+
+  inputEl.addEventListener('input', () => {
+    selectedAuto = -1;
+    const q = normalize(inputEl.value);
+    if (!q || q.length < 2) { dropEl.classList.remove('open'); return; }
+    const matches = champNames.filter(n => normalize(n).includes(q)).slice(0, 8);
+    if (!matches.length) { dropEl.classList.remove('open'); return; }
+    dropEl.innerHTML = matches.map(n =>
+      `<div class="auto-item" data-name="${escHtml(n)}" onclick="selectAuto(${JSON.stringify(n)})">${highlight(n, inputEl.value)}</div>`
+    ).join('');
+    dropEl.classList.add('open');
+  });
+
+  inputEl.addEventListener('keydown', e => {
+    const items = dropEl.querySelectorAll('.auto-item');
+    if (e.key === 'ArrowDown') {
+      selectedAuto = Math.min(selectedAuto + 1, items.length - 1);
+      markSelected(items); e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+      selectedAuto = Math.max(selectedAuto - 1, 0);
+      markSelected(items); e.preventDefault();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (answered) {
+        const nb = document.getElementById('next-btn');
+        if (nb.classList.contains('visible')) nextRound();
+        return;
+      }
+      if (items.length > 0) {
+        const idx = selectedAuto >= 0 ? selectedAuto : 0;
+        selectAuto(items[idx].dataset.name);
+      } else {
+        submitAnswer();
+      }
+    }
+  });
+
+  function markSelected(items) {
+    items.forEach((it, i) => it.classList.toggle('selected', i === selectedAuto));
+    if (selectedAuto >= 0) inputEl.value = items[selectedAuto].dataset.name;
+  }
+
+  function selectAuto(name) {
+    inputEl.value = name;
+    dropEl.classList.remove('open');
+    selectedAuto = -1;
+    checkAnswer(name);
+  }
+
+  function highlight(name, q) {
+    return name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<strong>$1</strong>');
+  }
+  function escHtml(s) { return s.replace(/"/g,'&quot;'); }
+
+  document.addEventListener('click', e => { if (!e.target.closest('.input-wrap')) dropEl.classList.remove('open'); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && answered && document.activeElement !== inputEl) {
+      const nb = document.getElementById('next-btn');
+      if (nb.classList.contains('visible')) nextRound();
+    }
+  });
+
+  window.addEventListener('resize', () => { if (!answered && transitionsEnabled) expandWindow(); });
+
+  init();
+</script>
+</body>
+</html>

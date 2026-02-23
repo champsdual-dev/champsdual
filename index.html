@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>League of Legends — Modes de Jeu</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C8AA6E; --gold-light: #F0E6D3; --gold-dark: #785A28; --deep: #010A13; --mid: #0A1628;
+  }
+  body { background: var(--deep); color: var(--gold-light); font-family: 'Cinzel', serif; min-height: 100vh; overflow-x: hidden; }
+  .bg-layer { position: fixed; inset: 0; z-index: 0; }
+  .bg-gradient {
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, #0d1f3c 0%, transparent 65%),
+                radial-gradient(ellipse 60% 40% at 50% 100%, #08111e 0%, transparent 70%), var(--deep);
+  }
+  .bg-hexgrid {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='70'%3E%3Cpolygon points='30,2 58,17 58,52 30,67 2,52 2,17' fill='none' stroke='%23C8AA6E' stroke-width='0.3' opacity='0.10'/%3E%3C/svg%3E");
+    background-size: 60px 70px;
+  }
+  .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .particle { position: absolute; border-radius: 50%; opacity: 0; background: var(--gold); animation: drift var(--dur) var(--delay) infinite ease-in-out; }
+  @keyframes drift { 0% { opacity:0; transform:translateY(0) translateX(0); } 20% { opacity:0.7; } 80% { opacity:0.2; } 100% { opacity:0; transform:translateY(-100px) translateX(var(--dx)); } }
+  .corner { position: fixed; width: 100px; height: 100px; z-index: 2; opacity: 0.45; }
+  .corner-tl { top:0;left:0; border-top:2px solid var(--gold);border-left:2px solid var(--gold); }
+  .corner-tr { top:0;right:0; border-top:2px solid var(--gold);border-right:2px solid var(--gold); }
+  .corner-bl { bottom:0;left:0; border-bottom:2px solid var(--gold);border-left:2px solid var(--gold); }
+  .corner-br { bottom:0;right:0; border-bottom:2px solid var(--gold);border-right:2px solid var(--gold); }
+  .orb { position:fixed; width:700px; height:700px; border-radius:50%; background:radial-gradient(circle, rgba(10,200,185,0.05) 0%, transparent 70%); top:30%; left:50%; transform:translate(-50%,-50%); pointer-events:none; z-index:1; animation:pulse-orb 5s ease-in-out infinite; }
+  @keyframes pulse-orb { 0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08);} }
+
+  .stage { position:relative; z-index:10; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:3rem 1.5rem 4rem; gap:0; }
+
+  .logo-wrap { text-align:center; animation:fadeUp .8s ease forwards; opacity:0; margin-bottom:1rem; }
+  .logo-rune { width:64px; height:64px; margin:0 auto 1.2rem; animation:spin-slow 20s linear infinite; }
+  @keyframes spin-slow { to { transform:rotate(360deg); } }
+  .title { font-family:'Cinzel Decorative',serif; font-size:clamp(1.8rem,6vw,4rem); font-weight:700; letter-spacing:.08em; background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 50%,#785A28 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 25px rgba(200,170,110,.35)); margin-bottom:.3em; }
+  .subtitle { font-size:clamp(.55rem,1.5vw,.75rem); letter-spacing:.5em; text-transform:uppercase; color:var(--gold); opacity:.6; margin-bottom:2.5rem; }
+
+  .divider { display:flex; align-items:center; gap:.75rem; width:min(700px,90vw); animation:fadeUp .8s ease forwards .3s; opacity:0; margin-bottom:2.5rem; }
+  .divider-line { flex:1; height:1px; }
+  .divider-line-l { background:linear-gradient(to right,transparent,var(--gold-dark),var(--gold)); }
+  .divider-line-r { background:linear-gradient(to left,transparent,var(--gold-dark),var(--gold)); }
+  .divider-diamond { width:8px; height:8px; background:var(--gold); transform:rotate(45deg); box-shadow:0 0 8px var(--gold); }
+
+  .section-label { font-size:.55rem; letter-spacing:.45em; text-transform:uppercase; color:var(--gold); opacity:.45; margin-bottom:2rem; animation:fadeUp .8s ease forwards .4s; opacity:0; }
+
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem; width:min(900px,92vw); animation:fadeUp .8s ease forwards .5s; opacity:0; }
+
+  .game-card { position:relative; background:linear-gradient(160deg,rgba(15,30,55,.9) 0%,rgba(5,12,25,.95) 100%); border:1px solid var(--gold-dark); padding:2rem 1.75rem; cursor:pointer; text-decoration:none; display:flex; flex-direction:column; gap:1rem; transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease; overflow:hidden; }
+  .game-card::before,.game-card::after { content:''; position:absolute; width:20px; height:20px; border-color:var(--gold); border-style:solid; transition:border-color .25s; }
+  .game-card::before { top:-1px;left:-1px;border-width:2px 0 0 2px; }
+  .game-card::after  { bottom:-1px;right:-1px;border-width:0 2px 2px 0; }
+  .card-corner-tr,.card-corner-bl { position:absolute; width:14px; height:14px; border-color:rgba(200,170,110,.3); border-style:solid; }
+  .card-corner-tr { top:-1px;right:-1px;border-width:2px 2px 0 0; }
+  .card-corner-bl { bottom:-1px;left:-1px;border-width:0 0 2px 2px; }
+  .game-card:hover { transform:translateY(-6px); border-color:var(--gold); box-shadow:0 0 30px rgba(200,170,110,.15),0 20px 40px rgba(0,0,0,.4); }
+
+  .card-number { font-family:'Cinzel Decorative',serif; font-size:2.5rem; color:rgba(200,170,110,.1); line-height:1; position:absolute; top:1rem; right:1.25rem; }
+  .card-icon { font-size:2rem; line-height:1; }
+  .card-name { font-family:'Cinzel Decorative',serif; font-size:clamp(.85rem,2vw,1.05rem); background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:.05em; line-height:1.3; }
+  .card-desc { font-size:.7rem; line-height:1.7; color:var(--gold-light); opacity:.55; letter-spacing:.05em; }
+  .card-tags { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:auto; }
+  .tag { font-size:.5rem; letter-spacing:.2em; text-transform:uppercase; padding:.25rem .6rem; border:1px solid rgba(200,170,110,.25); color:var(--gold); opacity:.6; }
+  .difficulty { display:flex; gap:4px; align-items:center; }
+  .pip { width:6px; height:6px; border-radius:50%; background:var(--gold-dark); }
+  .pip.active { background:var(--gold); box-shadow:0 0 4px var(--gold); }
+  .card-play { display:flex; align-items:center; justify-content:space-between; font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); opacity:0; transition:opacity .25s; margin-top:.5rem; }
+  .game-card:hover .card-play { opacity:1; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);} }
+</style>
+</head>
+<body>
+<div class="bg-layer bg-gradient"></div>
+<div class="bg-layer bg-hexgrid"></div>
+<div class="orb"></div>
+<div class="particles" id="particles"></div>
+<div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+<main class="stage">
+  <div class="logo-wrap">
+    <svg class="logo-rune" viewBox="0 0 80 80" fill="none">
+      <circle cx="40" cy="40" r="38" stroke="#C8AA6E" stroke-width="1" opacity="0.4"/>
+      <polygon points="40,6 74,27 74,53 40,74 6,53 6,27" fill="none" stroke="#C8AA6E" stroke-width="1.2" opacity="0.6"/>
+      <polygon points="40,18 62,31 62,49 40,62 18,49 18,31" fill="none" stroke="#C8AA6E" stroke-width="0.8" opacity="0.4"/>
+      <circle cx="40" cy="40" r="6" fill="#C8AA6E" opacity="0.8"/>
+      <circle cx="40" cy="40" r="3" fill="#F0E6D3"/>
+      <line x1="40" y1="34" x2="40" y2="18" stroke="#C8AA6E" stroke-width="0.8" opacity="0.6"/>
+      <line x1="40" y1="46" x2="40" y2="62" stroke="#C8AA6E" stroke-width="0.8" opacity="0.6"/>
+      <line x1="34" y1="40" x2="18" y2="40" stroke="#C8AA6E" stroke-width="0.8" opacity="0.6"/>
+      <line x1="46" y1="40" x2="62" y2="40" stroke="#C8AA6E" stroke-width="0.8" opacity="0.6"/>
+    </svg>
+    <h1 class="title">League of Legends</h1>
+    <p class="subtitle">Choisissez votre épreuve, Invocateur</p>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line divider-line-l"></div>
+    <div class="divider-diamond" style="width:6px;height:6px;opacity:.4"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-diamond" style="width:6px;height:6px;opacity:.4"></div>
+    <div class="divider-line divider-line-r"></div>
+  </div>
+
+  <div class="section-label">— Modes de Jeu —</div>
+
+  <div class="cards-grid">
+
+    <a class="game-card" href="game.html">
+      <div class="card-corner-tr"></div><div class="card-corner-bl"></div>
+      <div class="card-number">I</div>
+      <div class="card-icon">🌫️</div>
+      <div class="card-name">Flou</div>
+      <div class="card-desc">L'artwork est flouté. Identifiez le champion parmi 4 propositions. Rapide, idéal pour débuter.</div>
+      <div class="card-tags">
+        <span class="tag">QCM</span>
+        <span class="tag">10 rounds</span>
+        <div class="difficulty">
+          <div class="pip active"></div><div class="pip active"></div>
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+      </div>
+      <div class="card-play">Jouer <span>→</span></div>
+    </a>
+
+    <a class="game-card" href="game2.html">
+      <div class="card-corner-tr"></div><div class="card-corner-bl"></div>
+      <div class="card-number">II</div>
+      <div class="card-icon">⏱️</div>
+      <div class="card-name">Flou Chrono</div>
+      <div class="card-desc">L'image se dévoile progressivement. Tapez le nom du champion — plus vite vous répondez, plus vous marquez de points.</div>
+      <div class="card-tags">
+        <span class="tag">Saisie libre</span>
+        <span class="tag">Contre la montre</span>
+        <div class="difficulty">
+          <div class="pip active"></div><div class="pip active"></div>
+          <div class="pip active"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+      </div>
+      <div class="card-play">Jouer <span>→</span></div>
+    </a>
+
+    <a class="game-card" href="game3.html">
+      <div class="card-corner-tr"></div><div class="card-corner-bl"></div>
+      <div class="card-number">III</div>
+      <div class="card-icon">🔲</div>
+      <div class="card-name">Partiel</div>
+      <div class="card-desc">Seule une infime fenêtre de l'artwork est visible. Elle s'agrandit à chaque mauvais essai, mais vos points fondent.</div>
+      <div class="card-tags">
+        <span class="tag">QCM</span>
+        <span class="tag">Survie</span>
+        <div class="difficulty">
+          <div class="pip active"></div><div class="pip active"></div>
+          <div class="pip active"></div><div class="pip active"></div><div class="pip"></div>
+        </div>
+      </div>
+      <div class="card-play">Jouer <span>→</span></div>
+    </a>
+
+    <a class="game-card" href="game4.html">
+      <div class="card-corner-tr"></div><div class="card-corner-bl"></div>
+      <div class="card-number">IV</div>
+      <div class="card-icon">⚔️</div>
+      <div class="card-name">Champions</div>
+      <div class="card-desc">Retrouvez le nom de TOUS les champions. Jouez seul ou créez une salle pour inviter un ami — chrono en commun.</div>
+      <div class="card-tags">
+        <span class="tag">Multijoueur</span>
+        <span class="tag">Coopératif</span>
+        <div class="difficulty">
+          <div class="pip active"></div><div class="pip active"></div>
+          <div class="pip active"></div><div class="pip active"></div><div class="pip active"></div>
+        </div>
+      </div>
+      <div class="card-play">Jouer <span>→</span></div>
+    </a>
+
+  </div>
+</main>
+
+<script>
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 35; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random()*100+'%';
+    p.style.top  = (40+Math.random()*60)+'%';
+    p.style.setProperty('--dur',  (4+Math.random()*6)+'s');
+    p.style.setProperty('--delay',(Math.random()*7)+'s');
+    p.style.setProperty('--dx',   (Math.random()*60-30)+'px');
+    const s = Math.random()*2+1;
+    p.style.width = p.style.height = s+'px';
+    c.appendChild(p);
+  }
+</script>
+</body>
+</html>
