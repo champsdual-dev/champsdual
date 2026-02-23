@@ -200,6 +200,7 @@
   let current = null;
   let roundNum = 1, totalScore = 0;
   let answered = false;
+  let justAnswered = false;
   let phase = 'idle'; // 'grace' | 'play' | 'done'
   let graceCount = GRACE_SECS;
   let playElapsed = 0;
@@ -363,6 +364,7 @@
     if (answered) return;
     clearInterval(timerInterval);
     answered = true;
+    justAnswered = true; setTimeout(() => { justAnswered = false; }, 0);
     document.getElementById('champ-input').disabled = true;
     document.getElementById('submit-btn').disabled = true;
     document.getElementById('autocomplete').classList.remove('open');
@@ -446,9 +448,10 @@
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (answered) {
-        /* After answering, Enter = next round */
-        const nb = document.getElementById('next-btn');
-        if (nb.classList.contains('visible')) nextRound();
+        if (!justAnswered) {
+          const nb = document.getElementById('next-btn');
+          if (nb.classList.contains('visible')) nextRound();
+        }
         return;
       }
       if (items.length > 0) {
@@ -482,7 +485,7 @@
 
   /* Enter after answer = next round (when input not focused) */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && answered && document.activeElement !== inputEl) {
+    if (e.key === 'Enter' && answered && !justAnswered && document.activeElement !== inputEl) {
       const nb = document.getElementById('next-btn');
       if (nb.classList.contains('visible')) nextRound();
     }

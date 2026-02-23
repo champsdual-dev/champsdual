@@ -27,15 +27,6 @@
 
   .screen{position:relative;z-index:10;display:none;}
   .screen.active{display:flex;flex-direction:column;}
-
-  /* ══ SETUP ══ */
-  #setup-screen{min-height:100vh;align-items:center;justify-content:center;padding:2rem;}
-  .setup-box{border:1px solid var(--gold-dark);padding:2.5rem;background:linear-gradient(135deg,#0a1628,#010a13);position:relative;max-width:520px;width:100%;text-align:center;}
-  .setup-box::before{content:'';position:absolute;top:-2px;left:-2px;width:25px;height:25px;border:2px solid var(--gold);border-right:none;border-bottom:none;}
-  .setup-box::after{content:'';position:absolute;bottom:-2px;right:-2px;width:25px;height:25px;border:2px solid var(--gold);border-left:none;border-top:none;}
-  .setup-icon{font-size:2.5rem;margin-bottom:.75rem;}
-  .setup-title{font-family:'Cinzel Decorative',serif;font-size:1.3rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.4rem;}
-  .setup-sub{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:2rem;}
   .steps{text-align:left;display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem;}
   .step{display:flex;gap:.75rem;}
   .step-num{font-family:'Cinzel Decorative',serif;font-size:.9rem;color:var(--gold);min-width:1.4rem;}
@@ -253,25 +244,6 @@
   </div>
 </div>
 
-<!-- ══ SETUP ══ -->
-<div class="screen" id="setup-screen">
-  <div class="setup-box">
-    <div class="setup-icon">🚂</div>
-    <div class="setup-title">Configurer le serveur</div>
-    <div class="setup-sub">Railway + Socket.io</div>
-    <div class="steps">
-      <div class="step"><div class="step-num">1</div><div class="step-text">Créez un compte gratuit sur <a href="https://railway.app" target="_blank">railway.app</a></div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-text">Déployez le repo GitHub contenant <code>server.js</code> et <code>package.json</code></div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-text">Copiez l'URL publique <code>https://xxx.railway.app</code> ci-dessous</div></div>
-    </div>
-    <label class="field-label">URL du serveur Railway</label>
-    <input class="text-input" id="server-url" type="text" placeholder="https://votre-projet.railway.app">
-    <div class="error-msg" id="setup-error"></div>
-    <button class="gold-btn" onclick="saveServerUrl()">✦ Connecter et continuer</button>
-    <button class="skip-link" onclick="skipToLobby()">Passer — solo uniquement</button>
-  </div>
-</div>
-
 <!-- ══ LOBBY ══ -->
 <div class="screen" id="lobby-screen">
   <div class="lobby-header">
@@ -316,7 +288,6 @@
   </div>
   <div class="lobby-footer">
     <a class="back-link" href="index.html">← ChampsDual</a>
-    <button class="reconfig-btn" onclick="showScreen('setup-screen')">⚙ Serveur</button>
   </div>
 </div>
 
@@ -446,7 +417,6 @@ let version='', allChampions=[], champMap={};
 let mode='solo', myName='', mySocketId='';
 let roomCode='', startTime=0, timerIntvl=null, socket=null, serverUrl='';
 let foundIds=new Set(), events=[], playersList=[];
-const URL_KEY='lol-server-url';
 let guestId='';
 
 /* ════════════════════════════════
@@ -473,11 +443,11 @@ function getPlayerName(){
     allChampions=Object.values((await r.json()).data).map(c=>({id:c.id,name:c.name})).sort((a,b)=>a.name.localeCompare(b.name));
     allChampions.forEach(c=>{champMap[c.id]=c;});
     hideLoading();
-    const saved=localStorage.getItem(URL_KEY);
+    // Auto-connexion au même serveur (Railway)
+    connectSocket(window.location.origin);
     const hash=location.hash.replace('#','').toUpperCase().trim();
     if(hash.length===6)document.getElementById('room-code-input').value=hash;
-    if(saved){serverUrl=saved;document.getElementById('server-url').value=saved;connectSocket(saved);showScreen('lobby-screen');}
-    else showScreen('setup-screen');
+    showScreen('lobby-screen');
   }catch(e){document.getElementById('loading-text').textContent='Erreur réseau';}
 })();
 
@@ -503,13 +473,7 @@ function setStatus(s){
   dot.className='sdot '+s;
   txt.textContent=s==='connected'?'Connecté':s==='connecting'?'Connexion...':'Déconnecté';
 }
-function saveServerUrl(){
-  const url=document.getElementById('server-url').value.trim().replace(/\/$/,'');
-  if(!url.startsWith('http')){document.getElementById('setup-error').textContent='URL invalide';return;}
-  document.getElementById('setup-error').textContent='';
-  serverUrl=url;localStorage.setItem(URL_KEY,url);connectSocket(url);showScreen('lobby-screen');
-}
-function skipToLobby(){showScreen('lobby-screen');}
+
 
 /* ════════════════════════════════
    SOLO / MULTI
@@ -744,7 +708,6 @@ function escH(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 
 document.getElementById('player-name').addEventListener('keydown',e=>{if(e.key==='Enter')createRoom();});
 document.getElementById('room-code-input').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom();});
-document.getElementById('server-url').addEventListener('keydown',e=>{if(e.key==='Enter')saveServerUrl();});
 </script>
 </body>
 </html>

@@ -388,6 +388,7 @@
 
     if (isCorrect) {
       answered = true;
+      justAnswered = true; setTimeout(() => { justAnswered = false; }, 0);
       triesUsed++;
       const pts = POINTS_TABLE[Math.min(triesUsed - 1, POINTS_TABLE.length - 1)];
       totalScore += pts;
@@ -414,6 +415,7 @@
 
       if (livesLeft <= 0) {
         answered = true;
+        justAnswered = true; setTimeout(() => { justAnswered = false; }, 0);
         document.getElementById('champ-input').disabled = true;
         document.getElementById('submit-btn').disabled = true;
         document.getElementById('pts-avail').textContent = '0';
@@ -494,8 +496,10 @@
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (answered) {
-        const nb = document.getElementById('next-btn');
-        if (nb.classList.contains('visible')) nextRound();
+        if (!justAnswered) {
+          const nb = document.getElementById('next-btn');
+          if (nb.classList.contains('visible')) nextRound();
+        }
         return;
       }
       if (items.length > 0) {
@@ -527,7 +531,7 @@
   document.addEventListener('click', e => { if (!e.target.closest('.input-wrap')) dropEl.classList.remove('open'); });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && answered && document.activeElement !== inputEl) {
+    if (e.key === 'Enter' && answered && !justAnswered && document.activeElement !== inputEl) {
       const nb = document.getElementById('next-btn');
       if (nb.classList.contains('visible')) nextRound();
     }

@@ -71,6 +71,9 @@
   .game-card:hover .card-play { opacity:1; }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);} }
+
+  /* ── Empêcher la sélection et le drag des images ── */
+  img { -webkit-user-drag: none; user-drag: none; -webkit-user-select: none; user-select: none; pointer-events: none; }
 </style>
 </head>
 <body>

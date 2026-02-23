@@ -136,6 +136,7 @@
   let current = null;
   let roundNum = 1, score = 0, hintsLeft = 3;
   let answered = false;
+  let justAnswered = false;
 
   async function init() {
     try {
@@ -197,6 +198,7 @@
   function answer(id, btn) {
     if (answered) return;
     answered = true;
+    justAnswered = true; setTimeout(() => { justAnswered = false; }, 0);
     const isCorrect = id === current.id;
 
     document.getElementById('artwork-img').classList.remove('blurred');
@@ -264,7 +266,7 @@
 
   /* Enter key → next round */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && answered) {
+    if (e.key === 'Enter' && answered && !justAnswered) {
       const nb = document.getElementById('next-btn');
       if (nb.classList.contains('visible')) nextRound();
     }
