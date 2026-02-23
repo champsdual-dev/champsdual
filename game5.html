@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche du Jour — ChampsDual</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  :root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--deep:#010A13;--correct:#2ecc71;--wrong:#e74c3c;}
+  body{background:var(--deep);color:var(--gold-light);font-family:'Cinzel',serif;min-height:100vh;-webkit-user-select:none;user-select:none;}
+  input,button{font-family:'Cinzel',serif;}
+  input{-webkit-user-select:text;user-select:text;}
+  img{-webkit-user-drag:none;user-drag:none;pointer-events:none;}
+
+  .bg-layer{position:fixed;inset:0;z-index:0;}
+  .bg-gradient{background:radial-gradient(ellipse 80% 50% at 50% 0%,#0d1f3c 0%,transparent 60%),var(--deep);}
+  .bg-hexgrid{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='70'%3E%3Cpolygon points='30,2 58,17 58,52 30,67 2,52 2,17' fill='none' stroke='%23C8AA6E' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");background-size:60px 70px;}
+
+  /* ── Loading ── */
+  .loading{position:fixed;inset:0;z-index:60;background:var(--deep);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity .5s;}
+  .loading.hidden{opacity:0;pointer-events:none;}
+  .loading-title{font-family:'Cinzel Decorative',serif;font-size:1.5rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .loading-bar-wrap{width:200px;height:2px;background:rgba(200,170,110,.2);overflow:hidden;}
+  .loading-bar{width:100%;height:100%;background:linear-gradient(to right,transparent,var(--gold),transparent);animation:scan 1.2s ease-in-out infinite;}
+  @keyframes scan{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+  .loading-text{font-size:.6rem;letter-spacing:.3em;color:var(--gold);opacity:.5;text-transform:uppercase;}
+
+  /* ── Header ── */
+  .header{position:sticky;top:0;z-index:20;width:100%;background:rgba(1,10,19,.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(200,170,110,.18);padding:.65rem 1.5rem;display:flex;align-items:center;height:54px;}
+  .nav-wrap{position:relative;display:inline-block;}
+  .nav-btn{background:none;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.7;transition:opacity .2s;display:flex;align-items:center;gap:.3rem;padding:.3rem 0;}
+  .nav-btn:hover{opacity:1;}
+  .nav-arrow{font-size:.42rem;display:inline-block;transition:transform .2s;}
+  .nav-wrap:hover .nav-arrow{transform:rotate(180deg);}
+  .nav-wrap::after{content:'';position:absolute;left:0;right:0;height:8px;top:100%;}
+  .nav-menu{position:absolute;top:100%;left:0;min-width:170px;background:rgba(4,12,26,.98);border:1px solid var(--gold-dark);flex-direction:column;z-index:200;display:none;}
+  .nav-wrap:hover .nav-menu{display:flex;}
+  .nav-link{display:block;padding:.52rem .9rem;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-light);text-decoration:none;opacity:.65;transition:background .15s,opacity .15s;border-bottom:1px solid rgba(200,170,110,.06);white-space:nowrap;}
+  .nav-link:last-child{border-bottom:none;}
+  .nav-link:hover{background:rgba(200,170,110,.12);opacity:1;}
+  .nav-sep-line{height:1px;background:rgba(200,170,110,.15);}
+  .header-title{flex:1;text-align:center;font-family:'Cinzel Decorative',serif;font-size:clamp(.8rem,1.5vw,1rem);background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.12em;pointer-events:none;}
+  .header-right{width:120px;}/* placeholder pour symétrie */
+
+  /* ── Main layout ── */
+  .main{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 5rem;}
+
+  /* ── Daily badge ── */
+  .daily-badge{display:flex;align-items:center;gap:.6rem;margin-bottom:1.5rem;animation:fadeUp .5s ease both;}
+  .daily-badge-label{font-size:.48rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);opacity:.55;}
+  .daily-badge-date{font-size:.7rem;letter-spacing:.15em;color:var(--gold-light);}
+  .daily-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--correct);box-shadow:0 0 6px var(--correct);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ── Card wrapper ── */
+  .card{width:min(520px,96vw);border:1px solid var(--gold-dark);background:linear-gradient(160deg,rgba(12,28,52,.9),rgba(2,10,22,.95));position:relative;padding:1.75rem;margin-bottom:1.5rem;animation:fadeUp .5s ease both;}
+  .card::before{content:'';position:absolute;top:-2px;left:-2px;width:20px;height:20px;border:2px solid var(--gold);border-right:none;border-bottom:none;}
+  .card::after{content:'';position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border:2px solid var(--gold);border-left:none;border-top:none;}
+  .card-title{font-size:.44rem;letter-spacing:.38em;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;}
+  .card-title-num{font-family:'Cinzel Decorative',serif;font-size:.9rem;color:rgba(200,170,110,.2);}
+
+  /* ── Section 1 : Image floue ── */
+  .art-wrap{position:relative;width:100%;display:flex;justify-content:center;margin-bottom:1.25rem;}
+  .art-img{height:280px;width:auto;max-width:100%;object-fit:contain;border-radius:2px;transition:filter .7s ease;pointer-events:none;display:block;-webkit-user-drag:none;}
+  .tries-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+  .tries-label{font-size:.48rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);opacity:.55;}
+  .tries-pips{display:flex;gap:.4rem;}
+  .try-pip{width:10px;height:10px;border-radius:50%;border:1px solid var(--gold-dark);background:rgba(200,170,110,.1);transition:background .3s;}
+  .try-pip.used{background:var(--wrong);}
+  .try-pip.ok{background:var(--correct);}
+
+  /* ── Autocomplete input ── */
+  .input-wrap{position:relative;}
+  .guess-input{width:100%;padding:.7rem 1rem;background:rgba(10,22,40,.9);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:.06em;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-user-select:text;user-select:text;}
+  .guess-input:focus{border-color:var(--gold);}
+  .guess-input::placeholder{color:rgba(200,170,110,.28);}
+  .guess-input.wrong{border-color:var(--wrong)!important;animation:shake .3s ease;}
+  .guess-input.correct{border-color:var(--correct)!important;box-shadow:0 0 12px rgba(46,204,113,.3);}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .autocomplete{position:absolute;top:100%;left:0;right:0;background:rgba(4,12,26,.98);border:1px solid var(--gold-dark);border-top:none;z-index:30;display:none;max-height:180px;overflow-y:auto;}
+  .autocomplete.open{display:block;}
+  .auto-item{padding:.5rem .9rem;font-size:.72rem;letter-spacing:.05em;color:var(--gold-light);cursor:pointer;opacity:.75;transition:background .1s,opacity .1s;-webkit-user-select:none;user-select:none;}
+  .auto-item:hover,.auto-item.selected{background:rgba(200,170,110,.12);opacity:1;}
+  .auto-item strong{color:var(--gold);}
+  .guess-btn{width:100%;margin-top:.55rem;padding:.72rem;background:transparent;border:1px solid var(--gold-dark);color:var(--gold);font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,background .2s;}
+  .guess-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(200,170,110,.07);}
+  .guess-btn:disabled{opacity:.3;cursor:not-allowed;}
+  .guess-feedback{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;min-height:1.1rem;margin-top:.4rem;text-align:center;}
+  .guess-feedback.wrong{color:var(--wrong);}
+  .guess-feedback.correct{color:var(--correct);}
+
+  /* ── Reveal after section 1 ── */
+  .reveal-champ{display:flex;align-items:center;gap:1rem;padding:1rem;background:rgba(200,170,110,.05);border:1px solid rgba(200,170,110,.15);margin-top:1rem;}
+  .reveal-champ-img{width:56px;height:56px;border-radius:50%;border:2px solid var(--gold-dark);object-fit:cover;pointer-events:none;-webkit-user-drag:none;}
+  .reveal-champ-name{font-family:'Cinzel Decorative',serif;font-size:1.1rem;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .reveal-champ-result{font-size:.5rem;letter-spacing:.25em;text-transform:uppercase;margin-top:.2rem;}
+  .reveal-champ-result.win{color:var(--correct);}
+  .reveal-champ-result.lose{color:var(--wrong);}
+
+  /* ── Section 2 : Sorts ── */
+  .spells-pool{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;min-height:64px;}
+  .spell-chip{width:58px;height:58px;border:2px solid var(--gold-dark);border-radius:4px;cursor:pointer;transition:border-color .2s,transform .15s,opacity .2s;position:relative;overflow:hidden;background:rgba(8,18,32,.8);flex-shrink:0;}
+  .spell-chip img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;}
+  .spell-chip:hover{border-color:var(--gold);transform:translateY(-3px);}
+  .spell-chip.selected{border-color:var(--gold);box-shadow:0 0 14px rgba(200,170,110,.5);transform:translateY(-3px);}
+  .spell-chip.placed{opacity:.35;cursor:default;pointer-events:none;}
+  .spell-chip.placed:hover{transform:none;}
+
+  .slots-row{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .spell-slot{display:flex;flex-direction:column;align-items:center;gap:.3rem;}
+  .slot-box{width:58px;height:58px;border:2px dashed rgba(200,170,110,.3);border-radius:4px;background:rgba(8,18,32,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden;}
+  .slot-box:hover{border-color:rgba(200,170,110,.6);background:rgba(200,170,110,.06);}
+  .slot-box.has-spell{border-style:solid;border-color:var(--gold-dark);cursor:pointer;}
+  .slot-box.has-spell:hover{border-color:var(--gold);}
+  .slot-box img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;}
+  .slot-box.correct-slot{border-color:var(--correct)!important;box-shadow:0 0 10px rgba(46,204,113,.3);}
+  .slot-box.wrong-slot{border-color:var(--wrong)!important;}
+  .slot-label{font-size:.48rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.55;}
+  .slot-hint{font-size:.38rem;letter-spacing:.1em;color:var(--gold-light);opacity:.35;text-align:center;max-width:60px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+
+  /* ── Validate btn ── */
+  .validate-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.85rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.78rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(10px 0%,calc(100% - 10px) 0%,100% 50%,calc(100% - 10px) 100%,10px 100%,0% 50%);transition:transform .2s,filter .2s;}
+  .validate-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .validate-btn:hover{transform:scale(1.02);filter:brightness(1.1);}
+  .validate-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none;}
+
+  /* ── Section 2 result ── */
+  .spells-result{margin-top:1rem;padding:.85rem 1rem;background:rgba(200,170,110,.04);border:1px solid rgba(200,170,110,.12);}
+  .spells-score{font-family:'Cinzel Decorative',serif;font-size:1.3rem;text-align:center;margin-bottom:.4rem;}
+  .spells-score span{color:var(--gold);}
+  .spell-result-row{display:flex;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid rgba(200,170,110,.07);font-size:.58rem;letter-spacing:.06em;}
+  .spell-result-row:last-child{border-bottom:none;}
+  .spell-result-icon{width:28px;height:28px;border-radius:3px;border:1px solid rgba(200,170,110,.2);overflow:hidden;flex-shrink:0;}
+  .spell-result-icon img{width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .spell-result-check{font-size:.9rem;margin-left:auto;}
+
+  /* ── Section 3 : QCM ── */
+  .question-block{margin-bottom:1.1rem;}
+  .question-text{font-size:.68rem;line-height:1.65;color:var(--gold-light);margin-bottom:.6rem;letter-spacing:.04em;}
+  .choices-grid{display:flex;flex-direction:column;gap:.35rem;}
+  .choice-btn{padding:.6rem 1rem;background:rgba(10,22,40,.8);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.06em;text-align:left;cursor:pointer;transition:border-color .2s,background .2s;-webkit-user-select:none;user-select:none;}
+  .choice-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(200,170,110,.07);}
+  .choice-btn.chosen{border-color:var(--gold);background:rgba(200,170,110,.08);}
+  .choice-btn.correct-ans{border-color:var(--correct)!important;background:rgba(46,204,113,.1)!important;color:var(--correct);}
+  .choice-btn.wrong-ans{border-color:var(--wrong)!important;background:rgba(231,76,60,.08)!important;color:var(--wrong);}
+  .choice-btn:disabled{cursor:default;}
+  .qcm-score{text-align:center;font-family:'Cinzel Decorative',serif;font-size:1.3rem;margin-bottom:.4rem;}
+  .qcm-score span{color:var(--gold);}
+
+  /* ── Final summary ── */
+  .summary-card{text-align:center;}
+  .summary-title{font-family:'Cinzel Decorative',serif;font-size:1.6rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.4rem;}
+  .summary-sub{font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:1.4rem;}
+  .summary-scores{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;}
+  .summary-item{border:1px solid var(--gold-dark);padding:.8rem 1.2rem;text-align:center;min-width:90px;}
+  .summary-item-val{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold);display:block;}
+  .summary-item-lbl{font-size:.42rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);opacity:.5;display:block;margin-top:.15rem;}
+  .share-btn{padding:.65rem 1.8rem;background:transparent;border:1px solid var(--gold-dark);color:var(--gold);font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,background .2s;}
+  .share-btn:hover{border-color:var(--gold);background:rgba(200,170,110,.07);}
+
+  /* ── Section separator ── */
+  .section-sep{width:min(520px,96vw);display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;opacity:.4;}
+  .sep-line{flex:1;height:1px;background:var(--gold-dark);}
+  .sep-icon{font-size:.9rem;}
+
+  /* ── Hidden/visible helpers ── */
+  .hidden{display:none!important;}
+  .fade-in{animation:fadeUp .6s ease both;}
+
+  @media(max-width:480px){
+    .art-img{height:220px;}
+    .spell-chip,.slot-box{width:48px;height:48px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-layer bg-gradient"></div>
+<div class="bg-layer bg-hexgrid"></div>
+
+<div class="loading" id="loading">
+  <div class="loading-title">Fiche du Jour</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-text" id="loading-text">Chargement...</div>
+</div>
+
+<header class="header">
+  <div class="nav-wrap">
+    <button class="nav-btn">ChampsDual <span class="nav-arrow">▼</span></button>
+    <div class="nav-menu">
+      <a class="nav-link" href="index.html">🏠 Accueil</a>
+      <div class="nav-sep-line"></div>
+      <a class="nav-link" href="game.html">🌫️ Flou</a>
+      <a class="nav-link" href="game2.html">⏱️ Flou Chrono</a>
+      <a class="nav-link" href="game3.html">🔲 Partiel</a>
+      <a class="nav-link" href="game4.html">⚔️ Champions</a>
+    </div>
+  </div>
+  <div class="header-title">📋 Fiche du Jour</div>
+  <div class="header-right"></div>
+</header>
+
+<div class="main">
+
+  <div class="daily-badge">
+    <div class="daily-badge-dot"></div>
+    <span class="daily-badge-label">Fiche du</span>
+    <span class="daily-badge-date" id="daily-date">—</span>
+  </div>
+
+  <!-- ══════════════ SECTION 1 : IMAGE FLOUE ══════════════ -->
+  <div class="card" id="card-blur" style="animation-delay:.1s;">
+    <div class="card-title"><span class="card-title-num">I</span> Qui est ce champion ?</div>
+
+    <div class="art-wrap">
+      <img class="art-img" id="art-img" src="" alt="">
+    </div>
+
+    <div class="tries-row">
+      <span class="tries-label">Essais</span>
+      <div class="tries-pips" id="tries-pips"></div>
+    </div>
+
+    <div class="input-wrap" id="input-wrap">
+      <input class="guess-input" id="guess-input" type="text"
+             placeholder="Entrez le nom du champion..."
+             autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="autocomplete" id="autocomplete"></div>
+    </div>
+    <button class="guess-btn" id="guess-btn" onclick="submitGuess()">Valider</button>
+    <div class="guess-feedback" id="guess-feedback"></div>
+
+    <!-- Reveal after section 1 -->
+    <div class="reveal-champ hidden" id="reveal-champ">
+      <img class="reveal-champ-img" id="reveal-champ-img" src="" alt="">
+      <div>
+        <div class="reveal-champ-name" id="reveal-champ-name"></div>
+        <div class="reveal-champ-result" id="reveal-champ-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SECTION 2 : SORTS ══════════════ -->
+  <div class="section-sep hidden" id="sep2"><div class="sep-line"></div><span class="sep-icon">✦</span><div class="sep-line"></div></div>
+  <div class="card hidden" id="card-spells" style="animation-delay:.05s;">
+    <div class="card-title"><span class="card-title-num">II</span> Place les sorts dans le bon emplacement</div>
+
+    <div style="font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);opacity:.4;margin-bottom:.75rem;text-align:center;">
+      Clique un sort puis clique l'emplacement
+    </div>
+
+    <div class="spells-pool" id="spells-pool"></div>
+
+    <div class="slots-row" id="slots-row"></div>
+
+    <button class="validate-btn" id="spells-validate-btn" onclick="validateSpells()">✦ Valider les sorts</button>
+
+    <div class="spells-result hidden" id="spells-result"></div>
+  </div>
+
+  <!-- ══════════════ SECTION 3 : QCM ══════════════ -->
+  <div class="section-sep hidden" id="sep3"><div class="sep-line"></div><span class="sep-icon">✦</span><div class="sep-line"></div></div>
+  <div class="card hidden" id="card-qcm" style="animation-delay:.05s;">
+    <div class="card-title"><span class="card-title-num">III</span> Questions sur le champion</div>
+    <div id="questions-container"></div>
+    <button class="validate-btn" id="qcm-validate-btn" onclick="validateQCM()" style="margin-top:.5rem;">✦ Valider les réponses</button>
+    <div id="qcm-result" class="hidden" style="margin-top:1rem;"></div>
+  </div>
+
+  <!-- ══════════════ RÉSUMÉ FINAL ══════════════ -->
+  <div class="section-sep hidden" id="sep-final"><div class="sep-line"></div><span class="sep-icon">✦</span><div class="sep-line"></div></div>
+  <div class="card hidden summary-card" id="card-final" style="animation-delay:.05s;">
+    <div class="summary-title" id="final-title">Fiche complète !</div>
+    <div class="summary-sub" id="final-sub">Reviens demain pour une nouvelle fiche</div>
+    <div class="summary-scores" id="summary-scores"></div>
+    <button class="share-btn" onclick="shareResult()">📋 Copier le résultat</button>
+  </div>
+
+</div><!-- end .main -->
+
+<script>
+/* ═══════════════════════════════════════════
+   GLOBALS
+═══════════════════════════════════════════ */
+let version = '', allChampions = [], champNames = [];
+let dailyChamp = null, dailyDetail = null;
+let guessesLeft = 5, guessedCorrect = false;
+let blurLevels = [25, 20, 14, 9, 4, 0];
+let selectedSpell = null;    // { key, elem } currently selected in pool
+let slotState = {};          // { 'P': spellKey|null, 'A': ..., 'Z':..., 'E':..., 'R':... }
+let spellsShuffled = [];     // [{ key, label, imgUrl, name }]
+let questions = [];          // [{text, correct, choices:[]}]
+let userQCMAnswers = {};     // { qIdx: choiceText }
+let savedState = null;
+let s1Score = 0, s2Score = 0, s3Score = 0;
+
+/* ═══════════════════════════════════════════
+   DAILY SEED
+═══════════════════════════════════════════ */
+function getDailyKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function seededLCG(seed) {
+  let x = seed & 0x7FFFFFFF;
+  x = Math.imul(x ^ (x >>> 16), 0x45d9f3b);
+  x = Math.imul(x ^ (x >>> 16), 0x45d9f3b);
+  return (x >>> 0) / 0xFFFFFFFF;
+}
+function getDailySeed() {
+  const k = getDailyKey();
+  const [y, m, d] = k.split('-').map(Number);
+  return y * 10000 + m * 100 + d;
+}
+function getDailyChamp(champs) {
+  const seed = getDailySeed();
+  const idx = Math.floor(seededLCG(seed) * champs.length);
+  return champs[idx];
+}
+
+/* ═══════════════════════════════════════════
+   NORMALIZE / AUTOCOMPLETE
+═══════════════════════════════════════════ */
+function normalize(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+}
+function fuzzyOk(input, name) {
+  if (!input || input.length < 2) return false;
+  const ni = normalize(input), nc = normalize(name);
+  if (ni === nc) return true;
+  const len = Math.max(ni.length, nc.length);
+  const maxD = len <= 4 ? 0 : len <= 6 ? 1 : len <= 9 ? 2 : 3;
+  return levenshtein(ni, nc) <= maxD;
+}
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const row = Array.from({length: n+1}, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    let prev = row[0]; row[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const tmp = row[j];
+      row[j] = a[i-1] === b[j-1] ? prev : 1 + Math.min(prev, row[j], row[j-1]);
+      prev = tmp;
+    }
+  }
+  return row[n];
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+(async function boot() {
+  try {
+    const vRes  = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+    version = (await vRes.json())[0];
+    const cRes  = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`);
+    allChampions = Object.values((await cRes.json()).data).sort((a,b) => a.name.localeCompare(b.name));
+    champNames = allChampions.map(c => c.name);
+
+    dailyChamp = getDailyChamp(allChampions);
+
+    // Fetch detailed data
+    const dRes  = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion/${dailyChamp.id}.json`);
+    dailyDetail = Object.values((await dRes.json()).data)[0];
+
+    // Show date
+    const k = getDailyKey();
+    const [y, m, d] = k.split('-');
+    document.getElementById('daily-date').textContent = `${d}/${m}/${y}`;
+
+    hideLoading();
+
+    // Load or init saved state
+    const STORE_KEY = `ficheduJour_${k}`;
+    savedState = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!savedState) {
+      savedState = {
+        date: k,
+        s1: { done: false, won: false, triesUsed: 0, guesses: [] },
+        s2: { done: false, placements: {P:null,A:null,Z:null,E:null,R:null}, score: 0 },
+        s3: { done: false, answers: {}, score: 0 }
+      };
+    }
+
+    initSection1();
+    if (savedState.s1.done) restoreSection1();
+    if (savedState.s2.done || savedState.s1.done) {
+      buildSpells();
+      revealSection2();
+      if (savedState.s2.done) restoreSection2();
+    }
+    if (savedState.s3.done || savedState.s2.done) {
+      buildQCM();
+      revealSection3();
+      if (savedState.s3.done) restoreSection3();
+    }
+    if (savedState.s3.done) revealFinal();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loading-text').textContent = 'Erreur réseau';
+  }
+})();
+
+function hideLoading() {
+  document.getElementById('loading').classList.add('hidden');
+}
+function saveState() {
+  const k = getDailyKey();
+  localStorage.setItem(`ficheduJour_${k}`, JSON.stringify(savedState));
+}
+
+/* ═══════════════════════════════════════════
+   SECTION 1 — IMAGE FLOUE
+═══════════════════════════════════════════ */
+function initSection1() {
+  // Set blurred art
+  const art = document.getElementById('art-img');
+  art.src = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${dailyChamp.id}_0.jpg`;
+  setBlur(0); // index 0 = max blur
+
+  // Pips
+  renderPips(0);
+
+  // Autocomplete
+  const inp = document.getElementById('guess-input');
+  const drop = document.getElementById('autocomplete');
+  let selIdx = -1;
+
+  inp.addEventListener('input', () => {
+    const q = normalize(inp.value);
+    if (!q || q.length < 2) { drop.classList.remove('open'); return; }
+    const matches = champNames.filter(n => normalize(n).includes(q)).slice(0, 8);
+    if (!matches.length) { drop.classList.remove('open'); return; }
+    drop.innerHTML = matches.map(n =>
+      `<div class="auto-item" data-name="${escH(n)}" onclick="pickAuto('${escH(n)}')">${highlight(n, inp.value)}</div>`
+    ).join('');
+    drop.classList.add('open');
+    selIdx = -1;
+  });
+
+  inp.addEventListener('keydown', e => {
+    const items = drop.querySelectorAll('.auto-item');
+    if (e.key === 'ArrowDown') { selIdx = Math.min(selIdx+1, items.length-1); markSel(items, selIdx); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { selIdx = Math.max(selIdx-1, 0); markSel(items, selIdx); e.preventDefault(); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (items.length && selIdx >= 0) pickAuto(items[selIdx].dataset.name);
+      else if (items.length && selIdx === -1) pickAuto(items[0].dataset.name);
+      else submitGuess();
+    }
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.input-wrap')) drop.classList.remove('open'); });
+}
+
+function markSel(items, idx) {
+  items.forEach((it, i) => { it.classList.toggle('selected', i === idx); });
+  if (idx >= 0) document.getElementById('guess-input').value = items[idx].dataset.name;
+}
+function pickAuto(name) {
+  document.getElementById('guess-input').value = name;
+  document.getElementById('autocomplete').classList.remove('open');
+  submitGuess();
+}
+function highlight(name, q) {
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return name.replace(new RegExp('(' + escaped + ')', 'gi'), '<strong>$1</strong>');
+}
+
+function setBlur(tryIndex) {
+  const b = blurLevels[Math.min(tryIndex, blurLevels.length - 1)];
+  const br = [0.45, 0.55, 0.68, 0.8, 0.92, 1][Math.min(tryIndex, 5)];
+  document.getElementById('art-img').style.filter = `blur(${b}px) brightness(${br})`;
+}
+
+function renderPips(triesUsed) {
+  const container = document.getElementById('tries-pips');
+  container.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'try-pip' + (i < triesUsed ? ' used' : '');
+    container.appendChild(pip);
+  }
+}
+
+function submitGuess() {
+  if (guessesLeft <= 0 || guessedCorrect) return;
+  const val = document.getElementById('guess-input').value.trim();
+  if (!val) return;
+  document.getElementById('guess-input').value = '';
+  document.getElementById('autocomplete').classList.remove('open');
+
+  const isCorrect = fuzzyOk(val, dailyChamp.name);
+  const triesUsed = 5 - guessesLeft + 1;
+
+  savedState.s1.guesses.push(val);
+  savedState.s1.triesUsed = triesUsed;
+
+  if (isCorrect) {
+    guessedCorrect = true;
+    savedState.s1.won = true;
+    savedState.s1.done = true;
+    s1Score = guessesLeft; // more guesses left = better
+    setBlur(5);
+    renderPips(triesUsed);
+    // Mark last pip green
+    const pips = document.querySelectorAll('.try-pip');
+    if (pips[triesUsed-1]) pips[triesUsed-1].classList.replace('used','ok');
+    flashFeedback('✓ Exact !', 'correct');
+    disableSection1Input();
+    saveState();
+    setTimeout(() => showSection1Reveal(true), 700);
+  } else {
+    guessesLeft--;
+    setBlur(triesUsed);
+    renderPips(triesUsed);
+    if (guessesLeft === 0) {
+      savedState.s1.done = true;
+      savedState.s1.won = false;
+      s1Score = 0;
+      flashFeedback(`✗ C'était ${dailyChamp.name}`, 'wrong');
+      disableSection1Input();
+      saveState();
+      setTimeout(() => showSection1Reveal(false), 900);
+    } else {
+      flashFeedback(`✗ Mauvaise réponse — ${guessesLeft} essai${guessesLeft>1?'s':''} restant${guessesLeft>1?'s':''}`, 'wrong');
+    }
+  }
+}
+
+function flashFeedback(msg, type) {
+  const el = document.getElementById('guess-feedback');
+  el.textContent = msg;
+  el.className = 'guess-feedback ' + type;
+}
+
+function disableSection1Input() {
+  document.getElementById('guess-input').disabled = true;
+  document.getElementById('guess-btn').disabled = true;
+}
+
+function showSection1Reveal(won) {
+  setBlur(5); // full deblur
+  const el = document.getElementById('reveal-champ');
+  document.getElementById('reveal-champ-img').src =
+    `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${dailyChamp.id}.png`;
+  document.getElementById('reveal-champ-name').textContent = dailyChamp.name;
+  const resEl = document.getElementById('reveal-champ-result');
+  if (won) {
+    resEl.textContent = `Trouvé en ${savedState.s1.triesUsed} essai${savedState.s1.triesUsed>1?'s':''}`;
+    resEl.className = 'reveal-champ-result win';
+  } else {
+    resEl.textContent = 'Plus d\'essais — dommage !';
+    resEl.className = 'reveal-champ-result lose';
+  }
+  el.classList.remove('hidden');
+
+  // Open section 2
+  buildSpells();
+  setTimeout(() => revealSection2(), 600);
+}
+
+function restoreSection1() {
+  guessesLeft = 5 - savedState.s1.triesUsed;
+  if (savedState.s1.won) guessedCorrect = true;
+  s1Score = savedState.s1.won ? guessesLeft : 0;
+  setBlur(5);
+  renderPips(savedState.s1.triesUsed);
+  if (savedState.s1.won) {
+    const pips = document.querySelectorAll('.try-pip');
+    const t = savedState.s1.triesUsed;
+    if (pips[t-1]) pips[t-1].classList.replace('used','ok');
+    flashFeedback(`✓ Trouvé en ${t} essai${t>1?'s':''}`, 'correct');
+  } else {
+    flashFeedback(`✗ C'était ${dailyChamp.name}`, 'wrong');
+  }
+  disableSection1Input();
+  // show reveal
+  const el = document.getElementById('reveal-champ');
+  document.getElementById('reveal-champ-img').src =
+    `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${dailyChamp.id}.png`;
+  document.getElementById('reveal-champ-name').textContent = dailyChamp.name;
+  const resEl = document.getElementById('reveal-champ-result');
+  if (savedState.s1.won) {
+    resEl.textContent = `Trouvé en ${savedState.s1.triesUsed} essai${savedState.s1.triesUsed>1?'s':''}`;
+    resEl.className = 'reveal-champ-result win';
+  } else {
+    resEl.textContent = 'Plus d\'essais';
+    resEl.className = 'reveal-champ-result lose';
+  }
+  el.classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════
+   SECTION 2 — SORTS
+═══════════════════════════════════════════ */
+const SLOT_KEYS = ['P', 'A', 'Z', 'E', 'R'];
+const SLOT_LABELS = { P: 'Passif', A: 'A', Z: 'Z', E: 'E', R: 'R' };
+
+function buildSpells() {
+  const d = dailyDetail;
+  const passiveUrl = `https://ddragon.leagueoflegends.com/cdn/${version}/img/passive/${d.passive.image.full}`;
+  const spellUrls  = d.spells.map(s => `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${s.image.full}`);
+
+  spellsShuffled = [
+    { key: 'P', label: 'Passif', imgUrl: passiveUrl,   name: d.passive.name },
+    { key: 'A', label: 'A',      imgUrl: spellUrls[0], name: d.spells[0].name },
+    { key: 'Z', label: 'Z',      imgUrl: spellUrls[1], name: d.spells[1].name },
+    { key: 'E', label: 'E',      imgUrl: spellUrls[2], name: d.spells[2].name },
+    { key: 'R', label: 'R',      imgUrl: spellUrls[3], name: d.spells[3].name },
+  ];
+
+  // Shuffle using daily seed
+  const seed = getDailySeed();
+  for (let i = spellsShuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(seededLCG(seed ^ (i * 7919)) * (i + 1));
+    [spellsShuffled[i], spellsShuffled[j]] = [spellsShuffled[j], spellsShuffled[i]];
+  }
+
+  slotState = { P: null, A: null, Z: null, E: null, R: null };
+}
+
+function revealSection2() {
+  document.getElementById('sep2').classList.remove('hidden');
+  document.getElementById('sep2').classList.add('fade-in');
+  const card = document.getElementById('card-spells');
+  card.classList.remove('hidden');
+  card.classList.add('fade-in');
+  renderSpellsPool();
+  renderSlots();
+}
+
+function renderSpellsPool() {
+  const pool = document.getElementById('spells-pool');
+  pool.innerHTML = '';
+  spellsShuffled.forEach(sp => {
+    const isPlaced = Object.values(slotState).includes(sp.key);
+    const chip = document.createElement('div');
+    chip.className = 'spell-chip' + (isPlaced ? ' placed' : '');
+    chip.id = `chip-${sp.key}`;
+    chip.title = sp.name;
+    chip.innerHTML = `<img src="${sp.imgUrl}" alt="${escH(sp.name)}">`;
+    if (!isPlaced) chip.onclick = () => selectSpell(sp.key);
+    pool.appendChild(chip);
+  });
+}
+
+function renderSlots() {
+  const row = document.getElementById('slots-row');
+  row.innerHTML = '';
+  SLOT_KEYS.forEach(k => {
+    const sp = spellsShuffled.find(s => s.key === slotState[k]);
+    const slot = document.createElement('div');
+    slot.className = 'spell-slot';
+    const box = document.createElement('div');
+    box.className = 'slot-box' + (slotState[k] ? ' has-spell' : '');
+    box.id = `slot-${k}`;
+    box.onclick = () => clickSlot(k);
+    if (sp) {
+      box.innerHTML = `<img src="${sp.imgUrl}" alt="${escH(sp.name)}" title="${escH(sp.name)}">`;
+    }
+    const lbl = document.createElement('div');
+    lbl.className = 'slot-label';
+    lbl.textContent = SLOT_LABELS[k];
+    slot.append(box, lbl);
+    row.appendChild(slot);
+  });
+}
+
+function selectSpell(key) {
+  // Deselect if already selected
+  if (selectedSpell === key) {
+    selectedSpell = null;
+    document.querySelectorAll('.spell-chip').forEach(c => c.classList.remove('selected'));
+    return;
+  }
+  selectedSpell = key;
+  document.querySelectorAll('.spell-chip').forEach(c => c.classList.remove('selected'));
+  const chip = document.getElementById(`chip-${key}`);
+  if (chip) chip.classList.add('selected');
+}
+
+function clickSlot(slotKey) {
+  if (selectedSpell) {
+    // Check if another slot already has this spell → remove it
+    SLOT_KEYS.forEach(k => { if (slotState[k] === selectedSpell) slotState[k] = null; });
+    slotState[slotKey] = selectedSpell;
+    selectedSpell = null;
+    renderSpellsPool();
+    renderSlots();
+  } else if (slotState[slotKey]) {
+    // Pick up the spell from slot back to pool
+    selectedSpell = slotState[slotKey];
+    slotState[slotKey] = null;
+    renderSpellsPool();
+    renderSlots();
+    // Highlight it
+    const chip = document.getElementById(`chip-${selectedSpell}`);
+    if (chip) chip.classList.add('selected');
+  }
+}
+
+function validateSpells() {
+  // Check all slots filled
+  const empty = SLOT_KEYS.filter(k => !slotState[k]);
+  if (empty.length) {
+    // Flash empty slots
+    empty.forEach(k => {
+      const b = document.getElementById(`slot-${k}`);
+      if (b) { b.style.borderColor='var(--wrong)'; setTimeout(() => b.style.borderColor='', 600); }
+    });
+    return;
+  }
+
+  let score = 0;
+  const resultRows = [];
+  SLOT_KEYS.forEach(k => {
+    const correct = slotState[k] === k;
+    if (correct) score++;
+    const sp = spellsShuffled.find(s => s.key === slotState[k]);
+    const correctSp = spellsShuffled.find(s => s.key === k);
+    const box = document.getElementById(`slot-${k}`);
+    if (box) box.classList.add(correct ? 'correct-slot' : 'wrong-slot');
+    resultRows.push({ slotLabel: SLOT_LABELS[k], sp, correctSp, correct });
+  });
+
+  s2Score = score;
+  savedState.s2.done = true;
+  savedState.s2.placements = { ...slotState };
+  savedState.s2.score = score;
+  saveState();
+
+  document.getElementById('spells-validate-btn').disabled = true;
+  // Disable all chips and slots
+  document.querySelectorAll('.spell-chip').forEach(c => { c.onclick = null; c.style.cursor='default'; });
+  document.querySelectorAll('.slot-box').forEach(b => { b.onclick = null; b.style.cursor='default'; });
+
+  // Render result
+  const res = document.getElementById('spells-result');
+  const rows = resultRows.map(r => `
+    <div class="spell-result-row">
+      <div class="spell-result-icon"><img src="${r.correctSp.imgUrl}" alt=""></div>
+      <span>${r.slotLabel}</span>
+      ${r.correct ? '' : `<span style="font-size:.52rem;color:var(--gold);opacity:.45;">→ vous avez mis : ${r.sp ? r.sp.name : '—'}</span>`}
+      <span class="spell-result-check">${r.correct ? '✅' : '❌'}</span>
+    </div>`).join('');
+
+  res.innerHTML = `
+    <div class="spells-score">${score}<span>/5</span> sorts bien placés</div>
+    ${rows}`;
+  res.classList.remove('hidden');
+
+  // Open section 3
+  buildQCM();
+  setTimeout(() => revealSection3(), 700);
+}
+
+function restoreSection2() {
+  slotState = { ...savedState.s2.placements };
+  s2Score = savedState.s2.score;
+  renderSpellsPool();
+  renderSlots();
+  // Show results
+  let score = 0;
+  const resultRows = [];
+  SLOT_KEYS.forEach(k => {
+    const correct = slotState[k] === k;
+    if (correct) score++;
+    const sp = spellsShuffled.find(s => s.key === slotState[k]);
+    const correctSp = spellsShuffled.find(s => s.key === k);
+    const box = document.getElementById(`slot-${k}`);
+    if (box) box.classList.add(correct ? 'correct-slot' : 'wrong-slot');
+    resultRows.push({ slotLabel: SLOT_LABELS[k], sp, correctSp, correct });
+  });
+  document.getElementById('spells-validate-btn').disabled = true;
+  document.querySelectorAll('.spell-chip').forEach(c => { c.onclick = null; c.style.cursor='default'; });
+  document.querySelectorAll('.slot-box').forEach(b => { b.onclick = null; b.style.cursor='default'; });
+  const res = document.getElementById('spells-result');
+  const rows = resultRows.map(r => `
+    <div class="spell-result-row">
+      <div class="spell-result-icon"><img src="${r.correctSp.imgUrl}" alt=""></div>
+      <span>${r.slotLabel}</span>
+      ${r.correct ? '' : `<span style="font-size:.52rem;color:var(--gold);opacity:.45;">→ vous : ${r.sp ? r.sp.name : '—'}</span>`}
+      <span class="spell-result-check">${r.correct ? '✅' : '❌'}</span>
+    </div>`).join('');
+  res.innerHTML = `<div class="spells-score">${score}<span>/5</span> sorts bien placés</div>${rows}`;
+  res.classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════
+   SECTION 3 — QCM
+═══════════════════════════════════════════ */
+function buildQCM() {
+  const d = dailyDetail;
+  const tagFR = {'Fighter':'Combattant','Tank':'Tank','Mage':'Mage','Assassin':'Assassin','Support':'Support','Marksman':'Tireur d\'élite'};
+  const allClasses = Object.values(tagFR);
+  const allPartypes = [...new Set(allChampions.map(c => c.partype))].filter(p => p && p.length > 1);
+  const seed = getDailySeed();
+
+  function seededShuffle(arr, s) {
+    const a = [...arr];
+    for (let i = a.length-1; i > 0; i--) {
+      const j = Math.floor(seededLCG(s ^ (i * 2311)) * (i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // Q1 — Ressource
+  const correctPartype = d.partype || 'Mana';
+  const wrongPartypes = seededShuffle(allPartypes.filter(p => normalize(p) !== normalize(correctPartype)), seed ^ 1).slice(0, 3);
+  const q1Choices = seededShuffle([correctPartype, ...wrongPartypes], seed ^ 11);
+
+  // Q2 — Classe
+  const correctClass = tagFR[d.tags[0]] || d.tags[0];
+  const wrongClasses = seededShuffle(allClasses.filter(c => c !== correctClass), seed ^ 2).slice(0, 3);
+  const q2Choices = seededShuffle([correctClass, ...wrongClasses], seed ^ 22);
+
+  // Q3 — Difficulté
+  const diffVal = d.info ? d.info.difficulty : 5;
+  const getDiffLabel = v => v <= 3 ? 'Facile' : v <= 6 ? 'Intermédiaire' : v <= 8 ? 'Difficile' : 'Expert';
+  const correctDiff = getDiffLabel(diffVal);
+  const allDiffs = ['Facile', 'Intermédiaire', 'Difficile', 'Expert'];
+  const wrongDiffs = seededShuffle(allDiffs.filter(x => x !== correctDiff), seed ^ 3).slice(0, 3);
+  const q3Choices = seededShuffle([correctDiff, ...wrongDiffs], seed ^ 33);
+
+  questions = [
+    { text: `Quelle ressource <em>${d.name}</em> utilise-t-il/elle pour ses sorts ?`, correct: correctPartype, choices: q1Choices },
+    { text: `Quelle est la classe principale de <em>${d.name}</em> ?`, correct: correctClass, choices: q2Choices },
+    { text: `Quel niveau de difficulté Riot attribue-t-il à <em>${d.name}</em> ?`, correct: correctDiff, choices: q3Choices },
+  ];
+}
+
+function revealSection3() {
+  document.getElementById('sep3').classList.remove('hidden');
+  document.getElementById('sep3').classList.add('fade-in');
+  const card = document.getElementById('card-qcm');
+  card.classList.remove('hidden');
+  card.classList.add('fade-in');
+  renderQCM();
+}
+
+function renderQCM() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+  questions.forEach((q, qi) => {
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    const txt = document.createElement('div');
+    txt.className = 'question-text';
+    txt.innerHTML = `${qi+1}. ${q.text}`;
+    const grid = document.createElement('div');
+    grid.className = 'choices-grid';
+    q.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = choice;
+      btn.dataset.choice = choice;
+      btn.onclick = () => selectQCM(qi, choice, q.choices);
+      grid.appendChild(btn);
+    });
+    block.append(txt, grid);
+    container.appendChild(block);
+  });
+}
+
+function selectQCM(qIdx, choice, choices) {
+  if (savedState.s3.done) return;
+  userQCMAnswers[qIdx] = choice;
+  savedState.s3.answers[qIdx] = choice;
+  // Update UI
+  const blocks = document.querySelectorAll('.question-block');
+  const block = blocks[qIdx];
+  block.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.classList.toggle('chosen', btn.dataset.choice === choice);
+  });
+}
+
+function validateQCM() {
+  if (Object.keys(userQCMAnswers).length < questions.length) {
+    // Highlight unanswered
+    document.querySelectorAll('.question-block').forEach((block, qi) => {
+      if (!userQCMAnswers[qi]) block.style.outline = '1px solid var(--wrong)';
+      else block.style.outline = '';
+    });
+    return;
+  }
+
+  let score = 0;
+  document.querySelectorAll('.question-block').forEach((block, qi) => {
+    block.style.outline = '';
+    const correct = questions[qi].correct;
+    const chosen = userQCMAnswers[qi];
+    if (normalize(chosen) === normalize(correct)) score++;
+    block.querySelectorAll('.choice-btn').forEach(btn => {
+      btn.disabled = true;
+      if (btn.dataset.choice === correct) btn.classList.add('correct-ans');
+      else if (btn.dataset.choice === chosen && chosen !== correct) btn.classList.add('wrong-ans');
+    });
+  });
+
+  s3Score = score;
+  savedState.s3.done = true;
+  savedState.s3.score = score;
+  saveState();
+
+  document.getElementById('qcm-validate-btn').disabled = true;
+  const resEl = document.getElementById('qcm-result');
+  resEl.innerHTML = `<div class="qcm-score">${score}<span>/3</span> bonne${score>1?'s':''} réponse${score>1?'s':''}</div>`;
+  resEl.classList.remove('hidden');
+
+  setTimeout(() => revealFinal(), 700);
+}
+
+function restoreSection3() {
+  userQCMAnswers = { ...savedState.s3.answers };
+  s3Score = savedState.s3.score;
+  document.querySelectorAll('.question-block').forEach((block, qi) => {
+    const correct = questions[qi].correct;
+    const chosen = savedState.s3.answers[qi];
+    block.querySelectorAll('.choice-btn').forEach(btn => {
+      btn.disabled = true;
+      if (btn.dataset.choice === correct) btn.classList.add('correct-ans');
+      else if (btn.dataset.choice === chosen && chosen !== correct) btn.classList.add('wrong-ans');
+      if (btn.dataset.choice === chosen) btn.classList.add('chosen');
+    });
+  });
+  document.getElementById('qcm-validate-btn').disabled = true;
+  const resEl = document.getElementById('qcm-result');
+  resEl.innerHTML = `<div class="qcm-score">${s3Score}<span>/3</span> bonne${s3Score>1?'s':''} réponse${s3Score>1?'s':''}</div>`;
+  resEl.classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════
+   FINAL SUMMARY
+═══════════════════════════════════════════ */
+function revealFinal() {
+  s1Score = savedState.s1.won ? (5 - savedState.s1.triesUsed + 1) : 0;
+  s2Score = savedState.s2.score;
+  s3Score = savedState.s3.score;
+
+  document.getElementById('sep-final').classList.remove('hidden');
+  document.getElementById('sep-final').classList.add('fade-in');
+  const card = document.getElementById('card-final');
+  card.classList.remove('hidden');
+  card.classList.add('fade-in');
+
+  const totalParts = 3;
+  const sectionsDone = [savedState.s1.done, savedState.s2.done, savedState.s3.done].filter(Boolean).length;
+  document.getElementById('final-title').textContent =
+    sectionsDone === 3 ? '🏆 Fiche complète !' : '📋 Fiche du Jour';
+
+  const triesLabel = savedState.s1.won
+    ? `${savedState.s1.triesUsed}/5 essai${savedState.s1.triesUsed>1?'s':''}`
+    : 'Raté';
+
+  document.getElementById('summary-scores').innerHTML = `
+    <div class="summary-item">
+      <span class="summary-item-val">${triesLabel}</span>
+      <span class="summary-item-lbl">Devinette</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-item-val">${s2Score}/5</span>
+      <span class="summary-item-lbl">Sorts</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-item-val">${s3Score}/3</span>
+      <span class="summary-item-lbl">Questions</span>
+    </div>`;
+}
+
+function shareResult() {
+  const k = getDailyKey();
+  const [y, m, d] = k.split('-');
+  const triesEmoji = savedState.s1.won
+    ? '🟩'.repeat(savedState.s1.triesUsed) + '⬜'.repeat(5 - savedState.s1.triesUsed)
+    : '🟥🟥🟥🟥🟥';
+  const spellsEmoji = SLOT_KEYS.map(sk => savedState.s2.placements[sk] === sk ? '🟩' : '🟥').join('');
+  const qcmEmoji = [0,1,2].map(i => {
+    const ans = savedState.s3.answers[i];
+    return ans && normalize(ans) === normalize(questions[i].correct) ? '🟩' : '🟥';
+  }).join('');
+
+  const txt = `📋 Fiche du Jour — ${d}/${m}/${y}\nChampsDual\n\n🌫️ Devinette : ${triesEmoji}\n⚔️ Sorts     : ${spellsEmoji}\n❓ Questions : ${qcmEmoji}`;
+
+  navigator.clipboard.writeText(txt)
+    .then(() => {
+      const btn = document.querySelector('.share-btn');
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = '📋 Copier le résultat'; }, 2000);
+    })
+    .catch(() => alert(txt));
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
