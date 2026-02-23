@@ -639,14 +639,18 @@ let guestId='';
     if(hash.length===6 && hash.startsWith('D')){
       document.getElementById('duel-code-input').value = hash;
     }
-    if(saved){
+    // Connexion automatique sur le même serveur (comme game6)
+    const autoUrl = window.location.origin;
+    if(saved && saved !== autoUrl){
       serverUrl=saved;
       document.getElementById('server-url').value=saved;
       connectSocket(saved);
-      showScreen('s-lobby');
     } else {
-      showScreen('s-setup');
+      serverUrl=autoUrl;
+      document.getElementById('server-url').value=autoUrl;
+      connectSocket(autoUrl);
     }
+    showScreen('s-lobby');
   }catch(e){ document.getElementById('ld-txt').textContent='Erreur réseau'; }
 })();
 
