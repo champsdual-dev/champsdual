@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Champions — LoL</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<!-- Socket.io client fourni automatiquement par le serveur Express -->
+<script src="/socket.io/socket.io.js"></script>
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
   :root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--deep:#010A13;--correct:#2ecc71;--wrong:#e74c3c;--almost:#f39c12;}
@@ -22,76 +23,46 @@
   .screen{position:relative;z-index:10;display:none;}
   .screen.active{display:flex;flex-direction:column;}
 
-  /* ══ SETUP SCREEN (enter Railway URL) ══ */
-  #setup-screen{min-height:100vh;align-items:center;justify-content:center;padding:2rem;}
-  .setup-box{border:1px solid var(--gold-dark);padding:2.5rem;background:linear-gradient(135deg,#0a1628,#010a13);position:relative;max-width:560px;width:100%;text-align:center;}
-  .setup-box::before{content:'';position:absolute;top:-2px;left:-2px;width:25px;height:25px;border:2px solid var(--gold);border-right:none;border-bottom:none;}
-  .setup-box::after{content:'';position:absolute;bottom:-2px;right:-2px;width:25px;height:25px;border:2px solid var(--gold);border-left:none;border-top:none;}
-  .setup-icon{font-size:2.5rem;margin-bottom:.75rem;}
-  .setup-title{font-family:'Cinzel Decorative',serif;font-size:1.3rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.4rem;}
-  .setup-sub{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:2rem;}
-
-  .steps{text-align:left;display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem;}
-  .step{display:flex;gap:.75rem;}
-  .step-num{font-family:'Cinzel Decorative',serif;font-size:.9rem;color:var(--gold);min-width:1.4rem;padding-top:.05rem;}
-  .step-text{font-size:.66rem;line-height:1.7;color:var(--gold-light);opacity:.75;}
-  .step-text a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(200,170,110,.3);}
-  .step-text code{background:rgba(200,170,110,.1);padding:.1rem .3rem;font-family:monospace;font-size:.75rem;color:var(--gold-light);letter-spacing:0;border-radius:2px;}
-  .step-text b{color:var(--gold-light);opacity:1;}
-
-  .field-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.55;display:block;margin-bottom:.4rem;text-align:left;}
-  .text-input{width:100%;padding:.75rem 1rem;background:rgba(10,22,40,.9);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:.08em;outline:none;transition:border-color .2s;}
-  .text-input:focus{border-color:var(--gold);}
-  .text-input::placeholder{color:rgba(200,170,110,.22);font-family:monospace;letter-spacing:0;}
-
-  .gold-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.88rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.78rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(10px 0%,calc(100% - 10px) 0%,100% 50%,calc(100% - 10px) 100%,10px 100%,0% 50%);transition:transform .2s,filter .2s;margin-top:.75rem;}
-  .gold-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
-  .gold-btn:hover{transform:scale(1.02);filter:brightness(1.1);}
-  .ghost-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.75rem;background:transparent;border:1px solid var(--gold-dark);cursor:pointer;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);transition:border-color .2s,background .2s;margin-top:.5rem;}
-  .ghost-btn:hover{border-color:var(--gold);background:rgba(200,170,110,.06);}
-  .error-msg{font-size:.62rem;color:var(--wrong);min-height:1.2rem;margin-top:.5rem;letter-spacing:.05em;}
-  .skip-link{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.35;background:none;border:none;cursor:pointer;font-family:'Cinzel',serif;transition:opacity .2s;display:block;margin-top:1rem;}
-  .skip-link:hover{opacity:.85;}
-
   /* ══ LOBBY ══ */
   #lobby-screen{min-height:100vh;align-items:center;justify-content:center;padding:2rem;}
   .lobby-header{text-align:center;margin-bottom:2.5rem;animation:fadeUp .6s ease forwards;opacity:0;}
   .lobby-icon{font-size:2.8rem;margin-bottom:.6rem;}
   .lobby-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,4vw,2.2rem);background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
   .lobby-sub{font-size:.58rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);opacity:.5;}
-
   .lobby-cards{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;width:min(740px,92vw);animation:fadeUp .6s ease forwards .2s;opacity:0;}
   @media(max-width:560px){.lobby-cards{grid-template-columns:1fr;}}
-
-  .mode-card{position:relative;background:linear-gradient(160deg,rgba(15,30,55,.9),rgba(5,12,25,.95));border:1px solid var(--gold-dark);padding:2rem 1.75rem 1.75rem;display:flex;flex-direction:column;gap:.9rem;transition:transform .25s,border-color .25s,box-shadow .25s;overflow:hidden;}
+  .mode-card{position:relative;background:linear-gradient(160deg,rgba(15,30,55,.9),rgba(5,12,25,.95));border:1px solid var(--gold-dark);padding:2rem 1.75rem 1.75rem;display:flex;flex-direction:column;gap:.9rem;transition:transform .25s,border-color .25s,box-shadow .25s;}
   .mode-card::before,.mode-card::after{content:'';position:absolute;width:18px;height:18px;border-color:var(--gold);border-style:solid;}
   .mode-card::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
   .mode-card::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
   .mode-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 0 25px rgba(200,170,110,.1),0 15px 35px rgba(0,0,0,.4);}
-  .mode-card-num{font-family:'Cinzel Decorative',serif;font-size:2rem;color:rgba(200,170,110,.07);position:absolute;top:.75rem;right:.9rem;line-height:1;}
+  .mode-card-num{font-family:'Cinzel Decorative',serif;font-size:2rem;color:rgba(200,170,110,.07);position:absolute;top:.75rem;right:.9rem;}
   .mode-card-icon{font-size:2rem;line-height:1;}
   .mode-card-name{font-family:'Cinzel Decorative',serif;font-size:clamp(.9rem,2vw,1.1rem);background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
   .mode-card-desc{font-size:.65rem;line-height:1.75;color:var(--gold-light);opacity:.55;letter-spacing:.03em;}
-
-  .room-form{display:flex;flex-direction:column;gap:.5rem;margin-top:auto;}
-  .room-divider{display:flex;align-items:center;gap:.5rem;margin:.25rem 0;}
+  .gold-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.88rem;background:transparent;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.78rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--deep);clip-path:polygon(10px 0%,calc(100% - 10px) 0%,100% 50%,calc(100% - 10px) 100%,10px 100%,0% 50%);transition:transform .2s,filter .2s;margin-top:auto;}
+  .gold-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#F0E6D3 0%,#C8AA6E 50%,#A17D3A 100%);z-index:-1;}
+  .gold-btn:hover{transform:scale(1.02);filter:brightness(1.1);}
+  .ghost-btn{display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.75rem;background:transparent;border:1px solid var(--gold-dark);cursor:pointer;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);transition:border-color .2s,background .2s;}
+  .ghost-btn:hover{border-color:var(--gold);background:rgba(200,170,110,.06);}
+  .field-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.55;display:block;margin-bottom:.4rem;}
+  .text-input{width:100%;padding:.7rem .9rem;background:rgba(10,22,40,.9);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.08em;outline:none;transition:border-color .2s;}
+  .text-input:focus{border-color:var(--gold);}
+  .text-input::placeholder{color:rgba(200,170,110,.22);}
+  .room-form{display:flex;flex-direction:column;gap:.55rem;margin-top:auto;}
+  .room-divider{display:flex;align-items:center;gap:.5rem;margin:.2rem 0;}
   .room-divider-line{flex:1;height:1px;background:rgba(200,170,110,.12);}
   .room-divider-text{font-size:.44rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.4;}
-
-  /* Server status badge */
+  .error-msg{font-size:.62rem;color:var(--wrong);min-height:1.2rem;letter-spacing:.05em;}
   .server-status{display:inline-flex;align-items:center;gap:.4rem;font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.6;}
   .sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
   .sdot.connected{background:var(--correct);box-shadow:0 0 4px var(--correct);}
   .sdot.disconnected{background:var(--wrong);}
-  .sdot.connecting{background:var(--almost);animation:pulse-dot 1s infinite;}
-  @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
-
-  .lobby-footer{display:flex;align-items:center;justify-content:space-between;width:min(740px,92vw);margin-top:1.5rem;animation:fadeUp .5s ease forwards .35s;opacity:0;}
+  .sdot.connecting{background:var(--almost);animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .lobby-footer{display:flex;justify-content:flex-start;width:min(740px,92vw);margin-top:1.5rem;animation:fadeUp .5s ease forwards .35s;opacity:0;}
   .back-link{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.45;text-decoration:none;transition:opacity .2s;}
   .back-link:hover{opacity:.9;}
-  .reconfig-btn{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.3;background:none;border:none;cursor:pointer;font-family:'Cinzel',serif;transition:opacity .2s;}
-  .reconfig-btn:hover{opacity:.8;}
-
   @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 
   /* ══ GAME HEADER ══ */
@@ -106,27 +77,23 @@
   .hstat-lbl{font-size:.42rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;display:block;}
   .hstat-val{font-size:1rem;color:var(--gold-light);font-weight:600;font-family:'Cinzel Decorative',serif;}
   .timer-disp{font-family:'Cinzel Decorative',serif;font-size:1.3rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 6px rgba(200,170,110,.4));}
-
   .room-badge{display:flex;align-items:center;gap:.5rem;border:1px solid var(--gold-dark);padding:.28rem .65rem;cursor:pointer;transition:border-color .2s;background:rgba(10,22,40,.6);}
   .room-badge:hover{border-color:var(--gold);}
   .room-badge-lbl{font-size:.4rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;}
-  .room-badge-code{font-size:.78rem;letter-spacing:.2em;color:var(--gold);font-family:'Cinzel Decorative',serif;}
+  .room-badge-code{font-size:.8rem;letter-spacing:.2em;color:var(--gold);font-family:'Cinzel Decorative',serif;}
   .room-badge.hidden{display:none;}
-
   .players-bar{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;}
   .pip{display:flex;align-items:center;gap:.28rem;font-size:.53rem;color:var(--gold-light);opacity:.8;}
   .pipdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
   .pipdot.me{background:var(--gold);}
-  .pipdot.other{background:var(--correct);animation:pulse-dot 2s infinite;}
-
-  /* Input — NO autocomplete */
+  .pipdot.other{background:var(--correct);animation:blink 2s infinite;}
   .input-bar{display:flex;gap:.5rem;}
   .champ-input{flex:1;padding:.55rem .9rem;background:rgba(10,22,40,.9);border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:.06em;outline:none;transition:border-color .3s,box-shadow .3s;min-width:0;}
   .champ-input:focus{border-color:var(--gold);}
   .champ-input::placeholder{color:rgba(200,170,110,.28);}
-  .champ-input.fc{border-color:var(--correct) !important;box-shadow:0 0 10px rgba(46,204,113,.35);}
-  .champ-input.fw{border-color:var(--wrong) !important;box-shadow:0 0 8px rgba(231,76,60,.25);}
-  .champ-input.fa{border-color:var(--almost) !important;box-shadow:0 0 8px rgba(243,156,18,.3);}
+  .champ-input.fc{border-color:var(--correct)!important;box-shadow:0 0 10px rgba(46,204,113,.35);}
+  .champ-input.fw{border-color:var(--wrong)!important;box-shadow:0 0 8px rgba(231,76,60,.25);}
+  .champ-input.fa{border-color:var(--almost)!important;box-shadow:0 0 8px rgba(243,156,18,.3);}
   .mini-sub{padding:.55rem 1rem;background:transparent;border:1px solid var(--gold-dark);color:var(--gold);font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:border-color .2s,background .2s;}
   .mini-sub:hover{border-color:var(--gold);background:rgba(200,170,110,.07);}
   .inp-feedback{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;min-height:1rem;color:var(--gold);opacity:.65;padding:.12rem 0;}
@@ -144,14 +111,11 @@
   .fi-txt{font-size:.54rem;line-height:1.45;color:var(--gold-light);opacity:.8;min-width:0;overflow:hidden;}
   .fi-player{color:var(--gold);font-weight:600;}
   .fi-time{font-size:.45rem;color:var(--gold);opacity:.4;margin-left:auto;white-space:nowrap;}
-
   .grid-area{flex:1;padding:1.25rem;overflow-y:auto;}
   .prog-row{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;}
   .prog-bg{flex:1;height:3px;background:rgba(200,170,110,.12);}
   .prog-fill{height:100%;background:linear-gradient(to right,var(--gold-dark),var(--gold));transition:width .5s ease;}
   .prog-txt{font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);opacity:.55;white-space:nowrap;}
-
-  /* Champion grid */
   .champ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:.55rem;}
   .ctile{position:relative;aspect-ratio:1;border:1px solid rgba(200,170,110,.17);background:rgba(8,18,32,.85);overflow:hidden;transition:border-color .3s;}
   .ctile img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s;}
@@ -168,7 +132,7 @@
   .ctile-finder.byme{color:var(--correct);}
   @keyframes tileReveal{0%{transform:scale(.78);filter:brightness(2.5);}100%{transform:scale(1);filter:brightness(1);}}
 
-  /* Victory */
+  /* ══ VICTORY ══ */
   .victory{position:fixed;inset:0;z-index:50;background:rgba(1,10,19,.97);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s;}
   .victory.show{opacity:1;pointer-events:all;}
   .vic-box{text-align:center;border:1px solid var(--gold-dark);padding:2.5rem 3.5rem;background:linear-gradient(135deg,#0a1628,#010a13);position:relative;max-width:500px;width:90%;}
@@ -184,7 +148,6 @@
   .sc-name{font-size:.68rem;letter-spacing:.06em;color:var(--gold-light);}
   .sc-pts{font-size:.85rem;font-family:'Cinzel Decorative',serif;color:var(--gold);}
 
-  /* Loading */
   .loading{position:fixed;inset:0;z-index:60;background:var(--deep);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity .5s;}
   .loading.hidden{opacity:0;pointer-events:none;}
   .loading-title{font-family:'Cinzel Decorative',serif;font-size:1.5rem;background:linear-gradient(180deg,#F0E6D3 0%,#C8AA6E 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
@@ -210,41 +173,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════
-     SETUP — Enter Railway URL
-══════════════════════════════════ -->
-<div class="screen" id="setup-screen">
-  <div class="setup-box">
-    <div class="setup-icon">🚂</div>
-    <div class="setup-title">Configurer le serveur</div>
-    <div class="setup-sub">Railway + Socket.io</div>
-
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text">Créez un compte gratuit sur <a href="https://railway.app" target="_blank">railway.app</a></div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text">Créez un nouveau projet → <b>Deploy from GitHub repo</b> → importez le dossier <code>lol-server</code> fourni avec ce jeu (ou créez un repo GitHub avec les fichiers <code>server.js</code> et <code>package.json</code>)</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text">Une fois déployé, Railway vous donne une URL publique du type <code>https://xxx.railway.app</code> — copiez-la ci-dessous</div>
-      </div>
-    </div>
-
-    <label class="field-label" for="server-url">URL du serveur Railway</label>
-    <input class="text-input" id="server-url" type="text" placeholder="https://votre-projet.railway.app">
-    <div class="error-msg" id="setup-error"></div>
-    <button class="gold-btn" onclick="saveServerUrl()">✦ Connecter et continuer</button>
-    <button class="skip-link" onclick="skipToLobby()">Passer — jouer en solo uniquement</button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════
-     LOBBY
-══════════════════════════════════ -->
+<!-- ══ LOBBY ══ -->
 <div class="screen" id="lobby-screen">
   <div class="lobby-header">
     <div class="lobby-icon">⚔️</div>
@@ -253,32 +182,29 @@
   </div>
 
   <div class="lobby-cards">
-    <!-- SOLO -->
     <div class="mode-card">
       <div class="mode-card-num">I</div>
       <div class="mode-card-icon">🎯</div>
       <div class="mode-card-name">Solo</div>
-      <div class="mode-card-desc">Retrouvez seul le nom de tous les champions. Chrono en cours, tolérance sur les fautes de frappe et de phonétique.</div>
-      <button class="gold-btn" onclick="startSolo()" style="margin-top:auto;">▶ Jouer seul</button>
+      <div class="mode-card-desc">Retrouvez seul le nom de tous les champions. Tolérance phonétique — pas besoin d'être parfait !</div>
+      <button class="gold-btn" onclick="startSolo()">▶ Jouer seul</button>
     </div>
 
-    <!-- MULTI -->
     <div class="mode-card">
       <div class="mode-card-num">II</div>
       <div class="mode-card-icon">👥</div>
       <div class="mode-card-name">Multijoueur</div>
-      <div class="mode-card-desc">Créez une salle, partagez le lien. Trouvez tous les champions ensemble — synchronisation en temps réel via Socket.io.</div>
-
+      <div class="mode-card-desc">Créez une salle et partagez le lien. Trouvez tous les champions ensemble en temps réel.</div>
       <div class="room-form">
         <div>
-          <label class="field-label">Pseudo</label>
+          <label class="field-label">Votre pseudo</label>
           <input class="text-input" id="player-name" type="text" placeholder="Nom d'invocateur..." maxlength="18">
         </div>
         <div class="server-status">
-          <div class="sdot" id="sdot"></div>
-          <span id="stext">Non connecté</span>
+          <div class="sdot connecting" id="sdot"></div>
+          <span id="stext">Connexion au serveur...</span>
         </div>
-        <button class="gold-btn" id="create-btn" onclick="createRoom()">✦ Créer une salle</button>
+        <button class="gold-btn" onclick="createRoom()">✦ Créer une salle</button>
         <div class="room-divider">
           <div class="room-divider-line"></div>
           <div class="room-divider-text">ou rejoindre</div>
@@ -296,13 +222,10 @@
 
   <div class="lobby-footer">
     <a class="back-link" href="index.html">← Retour à l'accueil</a>
-    <button class="reconfig-btn" onclick="showScreen('setup-screen')">⚙ Changer l'URL du serveur</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     GAME
-══════════════════════════════════ -->
+<!-- ══ GAME ══ -->
 <div class="screen" id="game-screen">
   <div class="game-header">
     <div class="hdr-left">
@@ -312,10 +235,9 @@
           <div class="room-badge-lbl">Salle</div>
           <div class="room-badge-code" id="room-badge-code">——</div>
         </div>
-        <span style="font-size:.5rem;color:var(--gold);opacity:.4;margin-left:.3rem;">📋</span>
+        <span style="font-size:.5rem;color:var(--gold);opacity:.4;margin-left:.3rem;">📋 Copier lien</span>
       </div>
     </div>
-
     <div class="hdr-mid">
       <div class="input-bar">
         <input class="champ-input" id="champ-input" type="text"
@@ -325,7 +247,6 @@
       </div>
       <div class="inp-feedback" id="inp-feedback"></div>
     </div>
-
     <div class="hdr-right">
       <div class="hstat"><span class="hstat-lbl">Trouvés</span><span class="hstat-val" id="found-count">0</span></div>
       <div class="hstat"><span class="hstat-lbl">Total</span><span class="hstat-val" id="total-count">—</span></div>
@@ -349,7 +270,6 @@
   </div>
 </div>
 
-<!-- Victory -->
 <div class="victory" id="victory">
   <div class="vic-box">
     <div class="vic-title">🎉 Victoire !</div>
@@ -362,399 +282,252 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════
-   FUZZY / PHONETIC MATCHING
-═══════════════════════════════════════ */
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  if (!m) return n;  if (!n) return m;
-  const row = Array.from({length: n+1}, (_,i) => i);
-  for (let i = 1; i <= m; i++) {
-    let prev = row[0]; row[0] = i;
-    for (let j = 1; j <= n; j++) {
-      const tmp = row[j];
-      row[j] = a[i-1] === b[j-1] ? prev : 1 + Math.min(prev, row[j], row[j-1]);
-      prev = tmp;
-    }
-  }
+/* ═══════════════ FUZZY / PHONETIC ═══════════════ */
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  if(!m)return n;if(!n)return m;
+  const row=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){let p=row[0];row[0]=i;for(let j=1;j<=n;j++){const t=row[j];row[j]=a[i-1]===b[j-1]?p:1+Math.min(p,row[j],row[j-1]);p=t;}}
   return row[n];
 }
-
-function maxDist(len) {
-  if (len <= 3) return 0;
-  if (len <= 5) return 1;
-  if (len <= 8) return 2;
-  if (len <= 12) return 3;
-  return 4;
-}
-
-function nb(s) {  // base normalize
-  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
-}
-
-function np(s) {  // phonetic normalize
-  let r = nb(s);
-  r = r.replace(/ph/g,'f').replace(/ck/g,'k');
-  r = r.replace(/(.)\1+/g,'$1');   // double → single
-  r = r.replace(/^h/,'');           // silent H
-  r = r.replace(/y/g,'i').replace(/w/g,'v');
-  r = r.replace(/eau/g,'o').replace(/ai/g,'e').replace(/ei/g,'e');
-  r = r.replace(/qu/g,'k');
-  return r;
-}
-
-function fuzzyMatch(input, champName) {
-  if (!input || input.length < 2) return false;
-  const ni = nb(input), nc = nb(champName);
-  if (ni === nc) return 'exact';
-
-  // Levenshtein on base
-  const d = levenshtein(ni, nc);
-  const mx = maxDist(Math.max(ni.length, nc.length));
-  if (d <= mx) return 'fuzzy';
-
-  // Phonetic
-  const pi = np(input), pc = np(champName);
-  if (pi === pc) return 'fuzzy';
-  if (levenshtein(pi, pc) <= maxDist(Math.max(pi.length, pc.length))) return 'fuzzy';
-
-  // Try prepending silent H
-  if (levenshtein('h'+ni, nc) <= mx) return 'fuzzy';
-
-  // "Almost" = 1 beyond threshold
-  if (d <= mx + 1 || levenshtein(pi, pc) <= maxDist(Math.max(pi.length, pc.length)) + 1) return 'almost';
+function maxDist(l){if(l<=3)return 0;if(l<=5)return 1;if(l<=8)return 2;if(l<=12)return 3;return 4;}
+function nb(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
+function np(s){let r=nb(s);r=r.replace(/ph/g,'f').replace(/ck/g,'k').replace(/(.)\1+/g,'$1').replace(/^h/,'').replace(/y/g,'i').replace(/w/g,'v').replace(/eau/g,'o').replace(/ai/g,'e').replace(/qu/g,'k');return r;}
+function fuzzyMatch(input,champName){
+  if(!input||input.length<2)return false;
+  const ni=nb(input),nc=nb(champName);
+  if(ni===nc)return 'exact';
+  const d=levenshtein(ni,nc),mx=maxDist(Math.max(ni.length,nc.length));
+  if(d<=mx)return 'fuzzy';
+  const pi=np(input),pc=np(champName);
+  if(pi===pc||levenshtein(pi,pc)<=maxDist(Math.max(pi.length,pc.length)))return 'fuzzy';
+  if(levenshtein('h'+ni,nc)<=mx)return 'fuzzy';
+  if(d<=mx+1||levenshtein(pi,pc)<=maxDist(Math.max(pi.length,pc.length))+1)return 'almost';
   return false;
 }
 
-/* ═══════════════════════════════════════
-   DATA
-═══════════════════════════════════════ */
-let version = '', allChampions = [], champMap = {};
+/* ═══════════════ STATE ═══════════════ */
+let version='',allChampions=[],champMap={};
+let mode='solo',myName='',mySocketId='';
+let roomCode='',startTime=0,timerIntvl=null;
+let foundIds=new Set(),events=[],playersList=[];
+let socket=null;
 
-/* ─ Game ─ */
-let mode = 'solo', myName = '', mySocketId = '';
-let roomCode = '', startTime = 0;
-let timerIntvl = null, socket = null, serverUrl = '';
-let foundIds = new Set(), events = [], playersList = [];
+/* ═══════════════ SOCKET — connexion automatique au serveur ═══════════════ */
+function initSocket(){
+  // Se connecte automatiquement à la même origine (Railway)
+  socket=io({transports:['websocket','polling']});
+  socket.on('connect',      ()=>{mySocketId=socket.id;setStatus('connected');});
+  socket.on('disconnect',   ()=>setStatus('disconnected'));
+  socket.on('connect_error',()=>setStatus('disconnected'));
+  socket.on('champFound',   onRemoteFind);
+  socket.on('playerJoined', d=>{playersList=d.players;renderPlayers();});
+  socket.on('playerLeft',   d=>{playersList=d.players;renderPlayers();});
+}
+function setStatus(s){
+  const dot=document.getElementById('sdot'),txt=document.getElementById('stext');
+  if(!dot)return;
+  dot.className='sdot '+s;
+  txt.textContent=s==='connected'?'Serveur connecté':s==='connecting'?'Connexion...':'Serveur déconnecté';
+}
 
-const URL_KEY = 'lol-server-url';
-
-/* ═══════════════════════════════════════
-   BOOT
-═══════════════════════════════════════ */
-(async function boot() {
-  try {
-    const v = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-    version = (await v.json())[0];
-    const r = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`);
-    allChampions = Object.values((await r.json()).data)
-      .map(c => ({id:c.id, name:c.name}))
-      .sort((a,b) => a.name.localeCompare(b.name));
-    allChampions.forEach(c => { champMap[c.id] = c; });
+/* ═══════════════ BOOT ═══════════════ */
+(async function boot(){
+  try{
+    const v=await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+    version=(await v.json())[0];
+    const r=await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`);
+    allChampions=Object.values((await r.json()).data).map(c=>({id:c.id,name:c.name})).sort((a,b)=>a.name.localeCompare(b.name));
+    allChampions.forEach(c=>{champMap[c.id]=c;});
     hideLoading();
-
-    const saved = localStorage.getItem(URL_KEY);
-    const hash  = location.hash.replace('#','').toUpperCase().trim();
-    if (hash.length === 6) {
-      document.getElementById('room-code-input').value = hash;
-    }
-    if (saved) {
-      serverUrl = saved;
-      document.getElementById('server-url').value = saved;
-      connectSocket(saved);
-      showScreen('lobby-screen');
-    } else {
-      showScreen('setup-screen');
-    }
-  } catch(e) {
-    document.getElementById('loading-text').textContent = 'Erreur réseau';
+    initSocket();
+    const hash=location.hash.replace('#','').toUpperCase().trim();
+    if(hash.length===6)document.getElementById('room-code-input').value=hash;
+    showScreen('lobby-screen');
+    document.getElementById('player-name').focus();
+  }catch(e){
+    document.getElementById('loading-text').textContent='Erreur réseau — vérifiez votre connexion';
   }
 })();
 
-/* ═══════════════════════════════════════
-   SOCKET
-═══════════════════════════════════════ */
-function connectSocket(url) {
-  if (socket) { socket.disconnect(); socket = null; }
-  setServerStatus('connecting');
-  try {
-    socket = io(url, { transports: ['websocket','polling'], timeout: 6000 });
-    socket.on('connect',    () => { mySocketId = socket.id; setServerStatus('connected'); });
-    socket.on('disconnect', () => setServerStatus('disconnected'));
-    socket.on('connect_error', () => setServerStatus('disconnected'));
-
-    /* Real-time events from server */
-    socket.on('champFound',   onRemoteFind);
-    socket.on('playerJoined', data => { playersList = data.players; renderPlayers(); });
-    socket.on('playerLeft',   data => { playersList = data.players; renderPlayers(); });
-  } catch(e) { setServerStatus('disconnected'); }
+/* ═══════════════ SOLO ═══════════════ */
+function startSolo(){
+  mode='solo';myName='Vous';startTime=Date.now();
+  resetState();launchGame();
 }
 
-function setServerStatus(s) {
-  const dot = document.getElementById('sdot'); const txt = document.getElementById('stext');
-  if (!dot) return;
-  dot.className = 'sdot ' + s;
-  txt.textContent = s === 'connected' ? 'Connecté' : s === 'connecting' ? 'Connexion...' : 'Déconnecté';
-}
-
-/* ═══════════════════════════════════════
-   SETUP
-═══════════════════════════════════════ */
-function saveServerUrl() {
-  const url = document.getElementById('server-url').value.trim().replace(/\/$/, '');
-  if (!url.startsWith('http')) { document.getElementById('setup-error').textContent = 'URL invalide'; return; }
-  document.getElementById('setup-error').textContent = '';
-  serverUrl = url;
-  localStorage.setItem(URL_KEY, url);
-  connectSocket(url);
-  showScreen('lobby-screen');
-}
-function skipToLobby() { showScreen('lobby-screen'); }
-
-/* ═══════════════════════════════════════
-   SOLO
-═══════════════════════════════════════ */
-function startSolo() {
-  mode = 'solo'; myName = 'Vous';
-  startTime = Date.now();
-  resetState(); launchGame();
-}
-
-/* ═══════════════════════════════════════
-   MULTIPLAYER
-═══════════════════════════════════════ */
-function createRoom() {
-  if (!socket || !socket.connected) { setErr('Serveur non connecté'); return; }
-  const name = document.getElementById('player-name').value.trim();
-  if (!name) { setErr('Entrez votre pseudo'); return; }
-  setErr(''); myName = name; mode = 'multi';
-
-  socket.emit('createRoom', {name}, res => {
-    if (!res.ok) { setErr(res.error || 'Erreur'); return; }
-    roomCode  = res.code;
-    startTime = res.startTime;
-    location.hash = roomCode;
-    resetState(); launchGame();
+/* ═══════════════ MULTIPLAYER ═══════════════ */
+function createRoom(){
+  if(!socket?.connected){setErr('Serveur non connecté');return;}
+  const name=document.getElementById('player-name').value.trim();
+  if(!name){setErr('Entrez votre pseudo');return;}
+  setErr('');myName=name;mode='multi';
+  socket.emit('createRoom',{name},res=>{
+    if(!res.ok){setErr(res.error||'Erreur');return;}
+    roomCode=res.code;startTime=res.startTime;
+    location.hash=roomCode;resetState();launchGame();
   });
 }
-
-function joinRoom() {
-  if (!socket || !socket.connected) { setErr('Serveur non connecté'); return; }
-  const name = document.getElementById('player-name').value.trim();
-  const code = document.getElementById('room-code-input').value.trim().toUpperCase();
-  if (!name) { setErr('Entrez votre pseudo'); return; }
-  if (code.length !== 6) { setErr('Code invalide'); return; }
-  setErr(''); myName = name; mode = 'multi'; roomCode = code;
-
-  socket.emit('joinRoom', {name, code}, res => {
-    if (!res.ok) { setErr(res.error || 'Salle introuvable'); return; }
-    roomCode  = res.code;
-    startTime = res.startTime;
-    location.hash = roomCode;
-    resetState();
-    // Apply already found champions
-    (res.found || []).forEach(ev => {
-      if (!foundIds.has(ev.champId)) { foundIds.add(ev.champId); events.push(ev); }
-    });
-    playersList = res.players || [];
+function joinRoom(){
+  if(!socket?.connected){setErr('Serveur non connecté');return;}
+  const name=document.getElementById('player-name').value.trim();
+  const code=document.getElementById('room-code-input').value.trim().toUpperCase();
+  if(!name){setErr('Entrez votre pseudo');return;}
+  if(code.length!==6){setErr('Code invalide (6 caractères)');return;}
+  setErr('');myName=name;mode='multi';roomCode=code;
+  socket.emit('joinRoom',{name,code},res=>{
+    if(!res.ok){setErr(res.error||'Salle introuvable');return;}
+    roomCode=res.code;startTime=res.startTime;
+    location.hash=roomCode;resetState();
+    (res.found||[]).forEach(ev=>{if(!foundIds.has(ev.champId)){foundIds.add(ev.champId);events.push(ev);}});
+    playersList=res.players||[];
     launchGame();
   });
 }
-
-function onRemoteFind(ev) {
-  if (foundIds.has(ev.champId)) return;
-  foundIds.add(ev.champId); events.push(ev);
-  revealTile(ev.champId, ev.playerName, false);
-  addFeedItem(ev);
-  updateUI();
-  playersList = ev.players || playersList;
-  renderPlayers();
-  if (foundIds.size === allChampions.length) setTimeout(showVictory, 600);
+function onRemoteFind(ev){
+  if(foundIds.has(ev.champId))return;
+  foundIds.add(ev.champId);events.push(ev);
+  revealTile(ev.champId,ev.playerName,false);
+  addFeedItem(ev);updateUI();
+  playersList=ev.players||playersList;renderPlayers();
+  if(foundIds.size===allChampions.length)setTimeout(showVictory,600);
 }
 
-/* ═══════════════════════════════════════
-   LAUNCH
-═══════════════════════════════════════ */
-function resetState() { foundIds = new Set(); events = []; playersList = []; }
-
-function launchGame() {
+/* ═══════════════ LAUNCH ═══════════════ */
+function resetState(){foundIds=new Set();events=[];playersList=[];}
+function launchGame(){
   clearInterval(timerIntvl);
   buildGrid();
-  events.forEach(ev => revealTile(ev.champId, ev.playerName, ev.playerId === mySocketId));
+  events.forEach(ev=>revealTile(ev.champId,ev.playerName,ev.playerId===mySocketId));
   updateUI();
-
-  document.getElementById('total-count').textContent = allChampions.length;
-  if (mode === 'multi') {
+  document.getElementById('total-count').textContent=allChampions.length;
+  if(mode==='multi'){
     document.getElementById('room-badge').classList.remove('hidden');
-    document.getElementById('room-badge-code').textContent = roomCode;
-  } else {
+    document.getElementById('room-badge-code').textContent=roomCode;
+  }else{
     document.getElementById('room-badge').classList.add('hidden');
   }
   renderPlayers();
   showScreen('game-screen');
-  timerIntvl = setInterval(tickTimer, 1000);
+  timerIntvl=setInterval(tickTimer,1000);
   document.getElementById('champ-input').focus();
 }
 
-/* ═══════════════════════════════════════
-   GRID
-═══════════════════════════════════════ */
-function buildGrid() {
-  const grid = document.getElementById('champ-grid');
-  grid.innerHTML = '';
-  allChampions.forEach(ch => {
-    const tile = document.createElement('div'); tile.className = 'ctile'; tile.id = `t-${ch.id}`;
-    const img  = document.createElement('img');
-    img.src = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${ch.id}.png`;
-    img.alt = ''; img.loading = 'lazy';
-    const ov   = document.createElement('div'); ov.className = 'ctile-ov';
-    ov.innerHTML = '<span class="ctile-q">?</span>';
-    const nm   = document.createElement('div'); nm.className = 'ctile-name'; nm.textContent = ch.name;
-    const fi   = document.createElement('div'); fi.className = 'ctile-finder'; fi.id = `f-${ch.id}`;
-    tile.append(img, ov, nm, fi); grid.appendChild(tile);
+/* ═══════════════ GRID ═══════════════ */
+function buildGrid(){
+  const g=document.getElementById('champ-grid');g.innerHTML='';
+  allChampions.forEach(ch=>{
+    const tile=document.createElement('div');tile.className='ctile';tile.id=`t-${ch.id}`;
+    const img=document.createElement('img');
+    img.src=`https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${ch.id}.png`;
+    img.alt='';img.loading='lazy';
+    const ov=document.createElement('div');ov.className='ctile-ov';
+    ov.innerHTML='<span class="ctile-q">?</span>';
+    const nm=document.createElement('div');nm.className='ctile-name';nm.textContent=ch.name;
+    const fi=document.createElement('div');fi.className='ctile-finder';fi.id=`f-${ch.id}`;
+    tile.append(img,ov,nm,fi);g.appendChild(tile);
   });
 }
-
-function revealTile(id, finder, byme) {
-  const t = document.getElementById(`t-${id}`);
-  if (!t || t.classList.contains('found')) return;
-  t.classList.add('found'); if (byme) t.classList.add('byme');
-  const fi = document.getElementById(`f-${id}`);
-  if (fi && mode === 'multi') { fi.textContent = finder; if (byme) fi.classList.add('byme'); }
+function revealTile(id,finder,byme){
+  const t=document.getElementById(`t-${id}`);
+  if(!t||t.classList.contains('found'))return;
+  t.classList.add('found');if(byme)t.classList.add('byme');
+  const fi=document.getElementById(`f-${id}`);
+  if(fi&&mode==='multi'){fi.textContent=finder;if(byme)fi.classList.add('byme');}
 }
-
-function addFeedItem(ev) {
-  const feed = document.getElementById('feed-list');
-  const el = document.createElement('div'); el.className = 'fi';
-  const e = Math.floor((ev.ts - startTime) / 1000);
-  const t = `${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
-  el.innerHTML = `
-    <img class="fi-img" src="https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${ev.champId}.png" alt="">
-    <div class="fi-txt">${mode === 'multi' ? `<span class="fi-player">${escH(ev.playerName)}</span><br>` : ''}${escH(ev.champName)}</div>
-    <span class="fi-time">${t}</span>`;
-  feed.insertBefore(el, feed.firstChild);
-  while (feed.children.length > 80) feed.removeChild(feed.lastChild);
+function addFeedItem(ev){
+  const feed=document.getElementById('feed-list');
+  const el=document.createElement('div');el.className='fi';
+  const e=Math.floor((ev.ts-startTime)/1000);
+  const t=`${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
+  el.innerHTML=`<img class="fi-img" src="https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${ev.champId}.png" alt=""><div class="fi-txt">${mode==='multi'?`<span class="fi-player">${escH(ev.playerName)}</span><br>`:''}${escH(ev.champName)}</div><span class="fi-time">${t}</span>`;
+  feed.insertBefore(el,feed.firstChild);
+  while(feed.children.length>80)feed.removeChild(feed.lastChild);
 }
-
-function updateUI() {
-  const n = foundIds.size, tot = allChampions.length;
-  document.getElementById('found-count').textContent = n;
-  document.getElementById('prog-fill').style.width = (n/tot*100)+'%';
-  document.getElementById('prog-txt').textContent = `${n} / ${tot} champions`;
+function updateUI(){
+  const n=foundIds.size,tot=allChampions.length;
+  document.getElementById('found-count').textContent=n;
+  document.getElementById('prog-fill').style.width=(n/tot*100)+'%';
+  document.getElementById('prog-txt').textContent=`${n} / ${tot} champions`;
 }
-
-function renderPlayers() {
-  const bar = document.getElementById('players-bar'); bar.innerHTML = '';
-  if (mode !== 'multi') return;
-  (playersList||[]).forEach(p => {
-    const pip = document.createElement('div'); pip.className = 'pip';
-    const dot = document.createElement('div'); dot.className = 'pipdot ' + (p.id === mySocketId ? 'me' : 'other');
-    pip.append(dot, document.createTextNode(`${p.name} (${p.score})`));
+function renderPlayers(){
+  const bar=document.getElementById('players-bar');bar.innerHTML='';
+  if(mode!=='multi')return;
+  (playersList||[]).forEach(p=>{
+    const pip=document.createElement('div');pip.className='pip';
+    const dot=document.createElement('div');dot.className='pipdot '+(p.id===mySocketId?'me':'other');
+    pip.append(dot,document.createTextNode(`${p.name} (${p.score})`));
     bar.appendChild(pip);
   });
 }
 
-/* ═══════════════════════════════════════
-   ANSWER
-═══════════════════════════════════════ */
-document.getElementById('champ-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); submitAnswer(); }
+/* ═══════════════ ANSWER ═══════════════ */
+document.getElementById('champ-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();submitAnswer();}
 });
-
-function submitAnswer() {
-  const val = document.getElementById('champ-input').value.trim();
-  if (!val) return;
-  document.getElementById('champ-input').value = '';
-
-  let matched = null, matchType = false;
-  for (const ch of allChampions) {
-    const r = fuzzyMatch(val, ch.name);
-    if (r === 'exact' || r === 'fuzzy') { matched = ch; matchType = r; break; }
-    if (r === 'almost' && !matched)     { matched = ch; matchType = 'almost'; }
+function submitAnswer(){
+  const val=document.getElementById('champ-input').value.trim();
+  if(!val)return;
+  document.getElementById('champ-input').value='';
+  let matched=null,matchType=false;
+  for(const ch of allChampions){
+    const r=fuzzyMatch(val,ch.name);
+    if(r==='exact'||r==='fuzzy'){matched=ch;matchType=r;break;}
+    if(r==='almost'&&!matched){matched=ch;matchType='almost';}
   }
-
-  if (!matched) { flash('fw'); feedback('Champion inconnu...', 'wrong'); return; }
-  if (matchType === 'almost') { flash('fa'); feedback(`Presque ! → "${matched.name}"`, 'almost'); return; }
-  if (foundIds.has(matched.id)) { flash('fa'); feedback(`${matched.name} déjà trouvé !`, 'almost'); return; }
-
-  const ev = { champId: matched.id, champName: matched.name,
-               playerId: mySocketId || 'solo', playerName: myName, ts: Date.now() };
-  foundIds.add(matched.id); events.push(ev);
-  revealTile(matched.id, myName, true);
-  addFeedItem(ev);
-  flash('fc'); feedback(`✓ ${matched.name} !`, 'correct');
-  updateUI();
-
-  if (mode === 'multi' && socket?.connected) {
-    socket.emit('champFound', { champId: matched.id, champName: matched.name });
-  }
-  if (foundIds.size === allChampions.length) setTimeout(showVictory, 600);
+  if(!matched){flash('fw');fb('Champion inconnu...','wrong');return;}
+  if(matchType==='almost'){flash('fa');fb(`Presque ! → "${matched.name}"`,'almost');return;}
+  if(foundIds.has(matched.id)){flash('fa');fb(`${matched.name} déjà trouvé !`,'almost');return;}
+  const ev={champId:matched.id,champName:matched.name,playerId:mySocketId||'solo',playerName:myName,ts:Date.now()};
+  foundIds.add(matched.id);events.push(ev);
+  revealTile(matched.id,myName,true);
+  addFeedItem(ev);flash('fc');fb(`✓ ${matched.name} !`,'correct');updateUI();
+  if(mode==='multi'&&socket?.connected)socket.emit('champFound',{champId:matched.id,champName:matched.name});
+  if(foundIds.size===allChampions.length)setTimeout(showVictory,600);
 }
 
-/* ═══════════════════════════════════════
-   TIMER + VICTORY
-═══════════════════════════════════════ */
-function tickTimer() {
-  const e = Math.floor((Date.now()-startTime)/1000);
-  document.getElementById('timer-disp').textContent =
-    `${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
+/* ═══════════════ TIMER + VICTORY ═══════════════ */
+function tickTimer(){
+  const e=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById('timer-disp').textContent=`${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
 }
-function timeStr() {
-  const e = Math.floor((Date.now()-startTime)/1000);
-  return `${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
-}
-
-function showVictory() {
+function timeStr(){const e=Math.floor((Date.now()-startTime)/1000);return `${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;}
+function showVictory(){
   clearInterval(timerIntvl);
-  document.getElementById('vic-time').textContent = timeStr();
-  const sc = {};
-  events.forEach(ev => { if (!sc[ev.playerId]) sc[ev.playerId]={name:ev.playerName,n:0}; sc[ev.playerId].n++; });
-  const sorted = Object.values(sc).sort((a,b)=>b.n-a.n);
-  document.getElementById('scores').innerHTML = sorted.map((s,i)=>
-    `<div class="sc-row"><span class="sc-name">${i===0?'🏆 ':''}${escH(s.name)}</span><span class="sc-pts">${s.n} trouvés</span></div>`
-  ).join('');
+  document.getElementById('vic-time').textContent=timeStr();
+  const sc={};
+  events.forEach(ev=>{if(!sc[ev.playerId])sc[ev.playerId]={name:ev.playerName,n:0};sc[ev.playerId].n++;});
+  const sorted=Object.values(sc).sort((a,b)=>b.n-a.n);
+  document.getElementById('scores').innerHTML=sorted.map((s,i)=>`<div class="sc-row"><span class="sc-name">${i===0?'🏆 ':''}${escH(s.name)}</span><span class="sc-pts">${s.n} trouvés</span></div>`).join('');
   document.getElementById('victory').classList.add('show');
 }
 
-/* ═══════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════ */
-let fbT = null;
-function feedback(msg, type) {
-  const el = document.getElementById('inp-feedback');
-  el.textContent = msg;
-  el.style.color = type==='correct'?'var(--correct)':type==='almost'?'var(--almost)':'var(--wrong)';
-  clearTimeout(fbT); fbT = setTimeout(()=>el.textContent='', 2200);
+/* ═══════════════ HELPERS ═══════════════ */
+let fbT=null;
+function fb(msg,type){
+  const el=document.getElementById('inp-feedback');
+  el.textContent=msg;
+  el.style.color=type==='correct'?'var(--correct)':type==='almost'?'var(--almost)':'var(--wrong)';
+  clearTimeout(fbT);fbT=setTimeout(()=>el.textContent='',2200);
 }
-
-let flT = null;
-function flash(cls) {
-  const el = document.getElementById('champ-input');
-  el.classList.remove('fc','fw','fa'); void el.offsetWidth;
-  el.classList.add(cls);
-  clearTimeout(flT); flT = setTimeout(()=>el.classList.remove(cls), 650);
+let flT=null;
+function flash(cls){
+  const el=document.getElementById('champ-input');
+  el.classList.remove('fc','fw','fa');void el.offsetWidth;el.classList.add(cls);
+  clearTimeout(flT);flT=setTimeout(()=>el.classList.remove(cls),650);
 }
-
-function copyRoomLink() {
-  const url = `${location.origin}${location.pathname}#${roomCode}`;
-  navigator.clipboard.writeText(url)
-    .then(()=>toast('🔗 Lien copié !'))
-    .catch(()=>toast(`Code : ${roomCode}`));
+function copyRoomLink(){
+  const url=`${location.origin}${location.pathname.replace('game4.html','')}game4.html#${roomCode}`;
+  navigator.clipboard.writeText(url).then(()=>toast('🔗 Lien copié !')).catch(()=>toast(`Code : ${roomCode}`));
 }
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function hideLoading(){document.getElementById('loading').classList.add('hidden');}
+function setErr(m){document.getElementById('lobby-error').textContent=m;}
+function escH(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 
-function toast(msg) {
-  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 3000);
-}
-function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function showLoading(m) { document.getElementById('loading-text').textContent=m||'...'; document.getElementById('loading').classList.remove('hidden'); }
-function hideLoading()   { document.getElementById('loading').classList.add('hidden'); }
-function setErr(m)       { document.getElementById('lobby-error').textContent = m; }
-function escH(s)         { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-
-document.getElementById('player-name').addEventListener('keydown', e => { if(e.key==='Enter') createRoom(); });
-document.getElementById('room-code-input').addEventListener('keydown', e => { if(e.key==='Enter') joinRoom(); });
-document.getElementById('server-url').addEventListener('keydown', e => { if(e.key==='Enter') saveServerUrl(); });
+document.getElementById('player-name').addEventListener('keydown',e=>{if(e.key==='Enter')createRoom();});
+document.getElementById('room-code-input').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom();});
 </script>
 </body>
 </html>

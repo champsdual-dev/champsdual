@@ -9,28 +9,21 @@ const io     = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 
-/* ── Serve all HTML/CSS/JS files from the same folder ── */
-app.use(express.static(__dirname));
+/* ── Fichiers statiques (HTML, CSS, JS) ── */
+app.use(express.static(path.join(__dirname)));
 
-/* Fallback: any unknown route → index.html */
-app.get('*', (req, res) => {
+/* ── Fallback → index.html
+   IMPORTANT : exclure /socket.io/ sinon ça casse le websocket ── */
+app.get(/^(?!\/socket\.io).*$/, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-/* ════════════════════════════════════════
-   ROOMS
-   room = {
-     startTime : number,
-     found     : { [champId]: { champId, champName, playerId, playerName, ts } },
-     players   : { [socketId]: { name, score } }
-   }
-════════════════════════════════════════ */
+/* ═══════════════════ SALLES MULTIJOUEUR ═══════════════════ */
 const rooms = {};
 
 function genCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
-
 function buildPlayers(room) {
   return Object.entries(room.players).map(([id, p]) => ({ id, name: p.name, score: p.score }));
 }
@@ -39,7 +32,6 @@ io.on('connection', socket => {
   let currentRoom = null;
   let playerName  = 'Joueur';
 
-  /* ── CREATE ── */
   socket.on('createRoom', ({ name }, cb) => {
     playerName  = name || 'Joueur';
     const code  = genCode();
@@ -51,10 +43,9 @@ io.on('connection', socket => {
     };
     socket.join(code);
     cb({ ok: true, code, startTime: rooms[code].startTime });
-    console.log(`[${code}] created by ${playerName}`);
+    console.log(`[${code}] créée par ${playerName}`);
   });
 
-  /* ── JOIN ── */
   socket.on('joinRoom', ({ name, code }, cb) => {
     const room = rooms[code];
     if (!room) { cb({ ok: false, error: 'Salle introuvable' }); return; }
@@ -70,31 +61,32 @@ io.on('connection', socket => {
       players   : buildPlayers(room)
     });
     socket.to(code).emit('playerJoined', { id: socket.id, name: playerName, players: buildPlayers(room) });
-    console.log(`[${code}] ${playerName} joined`);
+    console.log(`[${code}] ${playerName} a rejoint`);
   });
 
-  /* ── CHAMP FOUND ── */
   socket.on('champFound', ({ champId, champName }) => {
     if (!currentRoom || !rooms[currentRoom]) return;
     const room = rooms[currentRoom];
-    if (room.found[champId]) return;                          // already found
+    if (room.found[champId]) return;
     const ev = { champId, champName, playerId: socket.id, playerName, ts: Date.now() };
     room.found[champId] = ev;
     if (room.players[socket.id]) room.players[socket.id].score++;
     io.to(currentRoom).emit('champFound', { ...ev, players: buildPlayers(room) });
   });
 
-  /* ── DISCONNECT ── */
   socket.on('disconnect', () => {
     if (!currentRoom || !rooms[currentRoom]) return;
     const room = rooms[currentRoom];
     delete room.players[socket.id];
     socket.to(currentRoom).emit('playerLeft', { id: socket.id, players: buildPlayers(room) });
     if (Object.keys(room.players).length === 0) {
-      setTimeout(() => { delete rooms[currentRoom]; }, 3_600_000); // clean after 1h
+      setTimeout(() => { delete rooms[currentRoom]; }, 3_600_000);
     }
   });
 });
 
+/* ── bind sur 0.0.0.0 obligatoire pour Railway ── */
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`✅ Serveur démarré sur le port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Serveur lancé → http://0.0.0.0:${PORT}`);
+});
