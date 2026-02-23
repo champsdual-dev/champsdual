@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>League of Legends — Modes de Jeu</title>
+<title>ChampsDual — LoL Quiz</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,9 +71,6 @@
   .game-card:hover .card-play { opacity:1; }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);} }
-
-  /* ── Empêcher la sélection et le drag des images ── */
-  img { -webkit-user-drag: none; user-drag: none; -webkit-user-select: none; user-select: none; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -97,7 +94,7 @@
       <line x1="34" y1="40" x2="18" y2="40" stroke="#C8AA6E" stroke-width="0.8" opacity="0.6"/>
       <line x1="46" y1="40" x2="62" y2="40" stroke="#C8AA6E" stroke-width="0.8" opacity="0.6"/>
     </svg>
-    <h1 class="title">League of Legends</h1>
+    <h1 class="title">ChampsDual</h1>
     <p class="subtitle">Choisissez votre épreuve, Invocateur</p>
   </div>
 
@@ -184,12 +181,12 @@
     <a class="game-card" href="game5.html">
       <div class="card-corner-tr"></div><div class="card-corner-bl"></div>
       <div class="card-number">V</div>
-      <div class="card-icon"></div>
-      <div class="card-name">Fiche du jour</div>
-      <div class="card-desc">Rempliser la fiche du champion du jour</div>
+      <div class="card-icon">📋</div>
+      <div class="card-name">Fiche du Jour</div>
+      <div class="card-desc">Chaque jour, un champion à deviner, ses sorts à replacer, 3 questions à répondre. La même fiche pour tout le monde.</div>
       <div class="card-tags">
-        <span class="tag">Saisie libre et choix multiple</span>
-        <span class="tag">journalier</span>
+        <span class="tag">Quotidien</span>
+        <span class="tag">3 épreuves</span>
         <div class="difficulty">
           <div class="pip active"></div><div class="pip active"></div>
           <div class="pip active"></div><div class="pip"></div><div class="pip"></div>
@@ -201,15 +198,15 @@
     <a class="game-card" href="game6.html">
       <div class="card-corner-tr"></div><div class="card-corner-bl"></div>
       <div class="card-number">VI</div>
-      <div class="card-icon">⏱️</div>
-      <div class="card-name">Flou battle</div>
-      <div class="card-desc">L'image se dévoile progressivement. Tapez le nom du champion — plus vite vous répondez, plus vous marquez de points.</div>
+      <div class="card-icon">⚡</div>
+      <div class="card-name">Flou Battle</div>
+      <div class="card-desc">Affrontez d'autres joueurs en temps réel ! Trouvez les champions floutés plus vite que vos adversaires. 10 manches, le plus rapide gagne.</div>
       <div class="card-tags">
-        <span class="tag">Saisie libre</span>
-        <span class="tag">Contre la montre</span>
+        <span class="tag">PvP</span>
+        <span class="tag">En ligne</span>
         <div class="difficulty">
           <div class="pip active"></div><div class="pip active"></div>
-          <div class="pip active"></div><div class="pip"></div><div class="pip"></div>
+          <div class="pip active"></div><div class="pip active"></div><div class="pip"></div>
         </div>
       </div>
       <div class="card-play">Jouer <span>→</span></div>
