@@ -202,16 +202,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .prog-bg{flex:1;height:3px;background:rgba(200,170,110,.12);}
 .prog-fill{height:100%;background:linear-gradient(to right,var(--gold-d),var(--gold));transition:width .5s ease;}
 .prog-txt{font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);opacity:.55;white-space:nowrap;}
-.champ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:.55rem;}
+.champ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:.55rem;}
 .ctile{position:relative;aspect-ratio:1;border:1px solid rgba(200,170,110,.17);background:rgba(8,18,32,.85);overflow:hidden;transition:border-color .3s;}
 .ctile img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s;}
 .ctile.found img{opacity:1;}
 .ctile-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(1,10,19,.8);transition:opacity .4s;pointer-events:none;}
 .ctile.found .ctile-ov{opacity:0;}
-.ctile-q{font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:rgba(200,170,110,.2);}
-.ctile-name{position:absolute;bottom:0;left:0;right:0;font-size:.35rem;letter-spacing:.04em;text-align:center;padding:.15rem .1rem;background:rgba(1,10,19,.88);color:var(--gold);opacity:0;transition:opacity .3s;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ctile-q{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:rgba(200,170,110,.2);}
+.ctile-name{position:absolute;bottom:0;left:0;right:0;font-size:.47rem;letter-spacing:.04em;text-align:center;padding:.15rem .1rem;background:rgba(1,10,19,.88);color:var(--gold);opacity:0;transition:opacity .3s;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ctile.found .ctile-name{opacity:1;}
-.ctile-finder{position:absolute;top:2px;left:0;right:0;font-size:.32rem;text-align:center;background:rgba(1,10,19,.72);padding:1px;color:var(--gold-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;}
+.ctile-finder{position:absolute;top:2px;left:0;right:0;font-size:.42rem;text-align:center;background:rgba(1,10,19,.72);padding:1px;color:var(--gold-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;}
 .ctile.found .ctile-finder{opacity:.7;}
 .ctile.found{border-color:rgba(200,170,110,.5);animation:tileReveal .45s ease;}
 .ctile.found.byme{border-color:var(--ok);}
@@ -231,7 +231,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .sc-row:last-child{border-bottom:none;}
 .sc-name{font-size:.68rem;letter-spacing:.06em;color:var(--gold-l);}
 .sc-pts{font-size:.85rem;font-family:'Cinzel Decorative',serif;color:var(--gold);}
-@media(max-width:680px){.feed-sidebar{display:none;}.champ-grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr));}}
+@media(max-width:680px){.feed-sidebar{display:none;}.champ-grid{grid-template-columns:repeat(auto-fill,minmax(62px,1fr));}}
 
 /* ═══════════════════════════════
    DUEL GAME SCREEN
@@ -261,7 +261,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .duel-half-title{font-size:.42rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5;padding:.4rem .8rem;border-bottom:1px solid rgba(200,170,110,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
 .duel-half-title.me-side{color:var(--gold);opacity:.85;}
 .duel-half-score{font-family:'Cinzel Decorative',serif;font-size:.7rem;color:var(--gold);}
-.duel-grid{flex:1;overflow-y:auto;padding:.75rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:5px;align-content:start;}
+.duel-grid{flex:1;overflow-y:auto;padding:.75rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:5px;align-content:start;}
 .duel-grid::-webkit-scrollbar{width:3px;}
 .duel-grid::-webkit-scrollbar-thumb{background:var(--gold-d);}
 .dtile{position:relative;aspect-ratio:1;border:1px solid rgba(200,170,110,.17);background:rgba(8,18,32,.85);overflow:hidden;transition:border-color .3s;}
@@ -269,8 +269,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .dtile.found img{opacity:1;}
 .dtile-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(1,10,19,.8);transition:opacity .4s;pointer-events:none;}
 .dtile.found .dtile-ov{opacity:0;}
-.dtile-q{font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:rgba(200,170,110,.2);}
-.dtile-name{position:absolute;bottom:0;left:0;right:0;font-size:.35rem;letter-spacing:.04em;text-align:center;padding:.15rem .1rem;background:rgba(1,10,19,.88);color:var(--gold);opacity:0;transition:opacity .3s;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dtile-q{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:rgba(200,170,110,.2);}
+.dtile-name{position:absolute;bottom:0;left:0;right:0;font-size:.47rem;letter-spacing:.04em;text-align:center;padding:.15rem .1rem;background:rgba(1,10,19,.88);color:var(--gold);opacity:0;transition:opacity .3s;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dtile.found .dtile-name{opacity:1;}
 .dtile.found{border-color:rgba(200,170,110,.5);animation:tileReveal .45s ease;}
 .dtile.attacked{animation:atkFlash .7s ease;}
@@ -284,11 +284,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .duel-input.dfc{border-color:var(--ok)!important;box-shadow:0 0 10px rgba(46,204,113,.3);}
 .duel-input.dfw{border-color:var(--bad)!important;animation:dshake .25s ease;}
 @keyframes dshake{0%,100%{transform:translateX(0);}30%{transform:translateX(-5px);}70%{transform:translateX(5px);}}
-.duel-drop{position:absolute;bottom:100%;left:0;right:0;background:rgba(4,12,26,.98);border:1px solid var(--gold-d);max-height:180px;overflow-y:auto;display:none;z-index:30;}
-.duel-drop.open{display:block;}
-.dauto-item{padding:.42rem .85rem;font-size:.72rem;letter-spacing:.05em;color:var(--gold-l);cursor:pointer;opacity:.72;transition:background .1s;-webkit-user-select:none;user-select:none;}
-.dauto-item:hover,.dauto-item.sel{background:rgba(200,170,110,.12);opacity:1;}
-.dauto-item strong{color:var(--gold);}
+
 .duel-found-cnt{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);opacity:.6;white-space:nowrap;}
 /* Attack notification */
 .atk-notif{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:55;background:rgba(231,76,60,.15);border:2px solid var(--bad);padding:.75rem 1.75rem;font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--bad);filter:drop-shadow(0 0 14px rgba(231,76,60,.5));pointer-events:none;opacity:0;transition:opacity .3s;text-align:center;}
@@ -562,7 +558,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <div class="duel-input-bar">
     <div class="duel-inp-wrap">
       <input class="duel-input" id="duel-input" type="text" placeholder="Tapez un nom de champion..." autocomplete="off" autocorrect="off" spellcheck="false">
-      <div class="duel-drop" id="duel-drop"></div>
     </div>
     <div class="duel-found-cnt" id="duel-cnt">0 / 50</div>
   </div>
@@ -585,11 +580,105 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 /* ═══════════════════════════════════════
    FUZZY / PHONETIC MATCHING (preserved)
 ═══════════════════════════════════════ */
-function levenshtein(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;const row=Array.from({length:n+1},(_,i)=>i);for(let i=1;i<=m;i++){let prev=row[0];row[0]=i;for(let j=1;j<=n;j++){const tmp=row[j];row[j]=a[i-1]===b[j-1]?prev:1+Math.min(prev,row[j],row[j-1]);prev=tmp;}}return row[n];}
-function maxDist(len){if(len<=3)return 0;if(len<=5)return 1;if(len<=8)return 2;if(len<=12)return 3;return 4;}
-function nb(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
-function np(s){let r=nb(s);r=r.replace(/ph/g,'f').replace(/ck/g,'k');r=r.replace(/(.)\\1+/g,'$1');r=r.replace(/^h/,'');r=r.replace(/y/g,'i').replace(/w/g,'v');r=r.replace(/eau/g,'o').replace(/ai/g,'e').replace(/ei/g,'e');r=r.replace(/qu/g,'k');return r;}
-function fuzzyMatch(input,champName){if(!input||input.length<2)return false;const ni=nb(input),nc=nb(champName);if(ni===nc)return 'exact';const d=levenshtein(ni,nc),mx=maxDist(Math.max(ni.length,nc.length));if(d<=mx)return 'fuzzy';const pi=np(input),pc=np(champName);if(pi===pc)return 'fuzzy';if(levenshtein(pi,pc)<=maxDist(Math.max(pi.length,pc.length)))return 'fuzzy';if(levenshtein('h'+ni,nc)<=mx)return 'fuzzy';if(d<=mx+1||levenshtein(pi,pc)<=maxDist(Math.max(pi.length,pc.length))+1)return 'almost';return false;}
+// Normalise : minuscule, sans accents, sans caractères spéciaux (espaces, tirets, apostrophes, etc.)
+// Normalise : minuscule, sans accents, sans caractères spéciaux
+function nb(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,''); }
+
+// Distance de Levenshtein simple
+function lev(a,b){
+  const m=a.length,n=b.length;
+  if(!m)return n; if(!n)return m;
+  const row=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){let prev=row[0];row[0]=i;for(let j=1;j<=n;j++){const tmp=row[j];row[j]=a[i-1]===b[j-1]?prev:1+Math.min(prev,row[j],row[j-1]);prev=tmp;}}
+  return row[n];
+}
+
+// Surnoms officiels : nb(surnom) → nb(champId Riot)
+const NICKNAMES = {
+  'ali':'alistar',
+  'mumu':'amumu',
+  'aphe':'aphelios',
+  'asol':'aurelionsol',
+  'belveth':'belveth',
+  'blitz':'blitzcrank',
+  'cait':'caitlyn',
+  'cassio':'cassiopeia',
+  'cho':'chogath',
+  'eve':'evelynn',
+  'ez':'ezreal',
+  'fiddle':'fiddlesticks',
+  'gp':'gangplank',
+  'heca':'hecarim',
+  'heimer':'heimerdinger',
+  'j4':'jarvaniv',
+  'kaisa':'kaisa',
+  'kali':'kalista',
+  'kass':'kassadin',
+  'kata':'katarina',
+  'kha':'khazix',
+  'lb':'leblanc',
+  'lee':'leesin',
+  'leo':'leona',
+  'liss':'lissandra',
+  'malph':'malphite',
+  'malz':'malzahar',
+  'mao':'maokai',
+  'yi':'masteryi',
+  'mf':'missfortune',
+  'morde':'mordekaiser',
+  'morg':'morgana',
+  'naut':'nautilus',
+  'noct':'nocturne',
+  'nunu':'nunu',
+  'ori':'orianna',
+  'panth':'pantheon',
+  'rek':'reksai',
+  'renata':'renata',
+  'rene':'renekton',
+  'rengo':'rengar',
+  'raka':'soraka',
+  'sej':'sejuani',
+  'sera':'seraphine',
+  'shyv':'shyvana',
+  'tali':'taliyah',
+  'tahm':'tahmkench',
+  'tf':'twistedfate',
+  'trist':'tristana',
+  'trynda':'tryndamere',
+  'vlad':'vladimir',
+  'voli':'volibear',
+  'ww':'warwick',
+  'xin':'xinzhao',
+  'yas':'yasuo',
+  'zil':'zilean',
+  'velkoz':'velkoz',
+  'mundo':'drmundo',
+  'kog':'kogmaw'
+};
+
+// Tente de matcher une saisie contre un champion
+// Retourne true si :
+//  - correspondance exacte sur le nom affiché ou l'id Riot (normalisés)
+//  - surnom reconnu pointant vers ce champion
+//  - distance de Levenshtein ≤ 1 si le nom normalisé fait ≥ 5 lettres
+function exactMatch(input, champName, champId){
+  if(!input) return false;
+  const ni  = nb(input);
+  const nc  = nb(champName);
+  const nid = nb(champId || '');
+
+  // 1. Correspondance exacte (nom affiché ou id Riot)
+  if(ni === nc || ni === nid) return true;
+
+  // 2. Surnom : NICKNAMES[nb(saisie)] === nb(id Riot du champion)
+  const nickTarget = NICKNAMES[ni];
+  if(nickTarget && nickTarget === nid) return true;
+
+  // 3. Tolérance d'une lettre (uniquement si nom normalisé ≥ 5 caractères)
+  if(nc.length >= 5 && lev(ni, nc) === 1) return true;
+
+  return false;
+}
 
 /* ═══════════════════════════════════════
    DATA & STATE
@@ -617,7 +706,6 @@ let myStreak=0;
 let duelTimerInterval=null, duelEndTime=0;
 let duelOppName='', duelOppId='';
 let duelAtkMode=false, duelAtkThreshold=5, duelChampCount=50;
-let duelSelAuto=-1;
 let guestId='';
 
 /* ═══════════════════════════════════════
@@ -854,10 +942,9 @@ function submitAnswer(){
   const val=document.getElementById('champ-input').value.trim();
   if(!val) return;
   document.getElementById('champ-input').value='';
-  let matched=null, matchType=false;
-  for(const ch of allChampions){ const r=fuzzyMatch(val,ch.name); if(r==='exact'||r==='fuzzy'){matched=ch;matchType=r;break;} if(r==='almost'&&!matched){matched=ch;matchType='almost';} }
+  // Correspondance exacte (insensible à la casse, aux accents et aux caractères spéciaux)
+  const matched=allChampions.find(ch=>exactMatch(val,ch.name,ch.id));
   if(!matched){ flashC('fw'); fbk('Champion inconnu...','wrong'); return; }
-  if(matchType==='almost'){ flashC('fa'); fbk(`Presque ! → "${matched.name}"`, 'almost'); return; }
   if(foundIds.has(matched.id)){ flashC('fa'); fbk(`${matched.name} déjà trouvé !`,'almost'); return; }
   const ev={champId:matched.id,champName:matched.name,playerId:mySocketId||'solo',playerName:myName,ts:Date.now()};
   foundIds.add(matched.id); events.push(ev);
@@ -1071,63 +1158,26 @@ function startDuelTimer(){
 
 /* Duel input */
 const dInp=document.getElementById('duel-input');
-const dDrop=document.getElementById('duel-drop');
-
-dInp.addEventListener('input',()=>{
-  duelSelAuto=-1;
-  const q=nb(dInp.value);
-  if(!q||q.length<1){ dDrop.classList.remove('open'); return; }
-  const matches=allChampions
-    .filter(c=>!myFoundSet.has(c.id)&&(nb(c.name).startsWith(q)||nb(c.name).includes(q)))
-    .sort((a,b)=>nb(a.name).startsWith(q)?-1:1).slice(0,8);
-  if(!matches.length){ dDrop.classList.remove('open'); return; }
-  dDrop.innerHTML=matches.map(c=>`<div class="dauto-item" data-name="${escH(c.name)}" onclick="pickDuelAuto('${escH(c.name)}')">${hlMatch(c.name,dInp.value)}</div>`).join('');
-  dDrop.classList.add('open');
-});
 
 dInp.addEventListener('keydown',e=>{
-  const items=dDrop.querySelectorAll('.dauto-item');
-  if(e.key==='ArrowDown'){duelSelAuto=Math.min(duelSelAuto+1,items.length-1);markDuelSel(items);e.preventDefault();}
-  else if(e.key==='ArrowUp'){duelSelAuto=Math.max(duelSelAuto-1,0);markDuelSel(items);e.preventDefault();}
-  else if(e.key==='Enter'){e.preventDefault();if(items.length&&duelSelAuto>=0)pickDuelAuto(items[duelSelAuto].dataset.name);else if(items.length)pickDuelAuto(items[0].dataset.name);else duelSubmit();}
+  if(e.key==='Enter'){ e.preventDefault(); duelSubmit(); }
 });
-document.addEventListener('click',e=>{ if(!e.target.closest('.duel-inp-wrap')) dDrop.classList.remove('open'); });
-
-function markDuelSel(items){
-  items.forEach((it,i)=>it.classList.toggle('sel',i===duelSelAuto));
-  if(duelSelAuto>=0) dInp.value=items[duelSelAuto].dataset.name;
-}
-function pickDuelAuto(name){
-  dInp.value=name; dDrop.classList.remove('open'); duelSelAuto=-1; duelSubmit();
-}
 
 function duelSubmit(){
   const val=dInp.value.trim(); if(!val) return;
-  dInp.value=''; dDrop.classList.remove('open');
-
-  // Fuzzy match
-  let matched=null;
-  for(const ch of allChampions){
-    const r=fuzzyMatch(val,ch.name);
-    if(r==='exact'||r==='fuzzy'){matched=ch;break;}
-  }
+  dInp.value='';
+  // Correspondance exacte (insensible à la casse, aux accents et aux caractères spéciaux)
+  const matched=allChampions.find(ch=>exactMatch(val,ch.name,ch.id));
   if(!matched||myFoundSet.has(matched.id)){
     dInp.className='duel-input dfw'; setTimeout(()=>dInp.className='duel-input',450); return;
   }
-
   // Correct
   dInp.className='duel-input dfc'; setTimeout(()=>dInp.className='duel-input',500);
   myFoundSet.add(matched.id); myStreak++;
   revealDtile(matched.id,'m');
   updateDuelMyScore();
   socket.emit('duel:found',{champId:matched.id});
-
-  // Attack check (client confirms streak, server enforces)
   if(duelAtkMode) renderAtkPips(myStreak%duelAtkThreshold===0&&myStreak>0?0:myStreak%duelAtkThreshold);
-
-  if(myFoundSet.size>=duelChampCount){
-    // server will send over
-  }
 }
 
 function updateDuelMyScore(){
@@ -1231,7 +1281,6 @@ function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.class
 function hideLoading(){ document.getElementById('loading').classList.add('hidden'); }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3000); }
 function escH(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-function hlMatch(name,q){ return name.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<strong>$1</strong>'); }
 
 document.getElementById('player-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createCoopRoom(); });
 document.getElementById('room-code-input').addEventListener('keydown',e=>{ if(e.key==='Enter') joinCoopRoom(); });
