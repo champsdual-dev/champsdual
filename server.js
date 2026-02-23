@@ -10,11 +10,11 @@ const io     = new Server(server, {
 });
 
 /* ── Serve all HTML/CSS/JS files from the same folder ── */
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 /* Fallback: any unknown route → index.html */
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 /* ════════════════════════════════════════
